@@ -1,9 +1,12 @@
 # Import packages
 import pandas as pd 
-from pandas.plotting import scatter_matrix
+#from pandas.plotting import scatter_matrix
 import numpy as np 
 import os 
 import matplotlib.pyplot as plt
+import seaborn as sns
+sns.set(style="ticks", color_codes=True)
+
 
 # Define functions
 def filter_articles(articles, n_publications, p_top):
@@ -83,13 +86,11 @@ filename_output = os.path.abspath(os.path.realpath(filename_output))
 articles_filtered.to_csv(path_or_buf=filename_output)
 
 # For initial visualization, pull numerical data for scatter matrix
-articles_selected = articles_filtered[["firstPublishedDatetime",
-                                       "imageCount",
-                                       "linksCount",
+articles_selected = articles_filtered[["imageCount",
                                        "tagsCount",
                                        "wordCount",
                                        "totalClapCount"]]
 fig = plt.figure()
-scatter_matrix(articles_selected)
+sns.pairplot(articles_selected)
 plt.show()
 
