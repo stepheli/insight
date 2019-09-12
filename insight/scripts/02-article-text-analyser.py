@@ -17,14 +17,17 @@ class ArticleTextAnalyser:
     Process the text of an article to extract some secondary statistics 
     (word length, sentence length, unique word count, etc.)
     """
-    def __init__(self,article):
+    def __init__(self,postId,article):
         """ 
         Initialize class. Receive article text as input, split it up into 
         words and sentences for subfunctions to process further.
         
         Arguments:
             self - Internal class references
-            articletext - Single string variable containing all the article 
+            postId - Unique identifier. Used to confirm the metrics for a given 
+                post are being added to the correct row when merging dataframes 
+                later.
+            article - Single string variable containing all the article 
                 text. Does not have to be preprocessed to remove stray 
                 formatting characters.
             stopset - List of common connecting words to ignore.
@@ -43,6 +46,7 @@ class ArticleTextAnalyser:
         """  
         # Set up initial variables, split into different levels 
         # (article/sentence/text) for further analysis.
+        self.postId = postId
         self.articletext = article
         self.sentences = self.articletext.split(".")
         self.words = nltk.word_tokenize(self.articletext)
@@ -113,14 +117,18 @@ articles_filtered = pd.read_csv(filename)
 stopset = set(stopwords.words('english'))
 
 articles_analysed = pd.DataFrame(columns=["n_sentences",
-                                           "a_sentence_length",
-                                           "n_words",
-                                           "u_words",
-                                           "a_word_length"])
+                                          "a_sentence_length",
+                                          "n_words",
+                                          "u_words",
+                                          "a_word_length"])
 for i in range(0,len(articles_filtered)):
     print("Now processing: article {} of {}".format(i+1,len(articles_filtered)))
-    article_metrics = ArticleTextAnalyser(articles_filtered["text"].iloc[i]).article_metrics()
+    article_metrics = ArticleTextAnalyser(articles_filtered["postId"].iloc[i],
+                                          articles_filtered["text"].iloc[i]).article_metrics()
     articles_analysed = articles_analysed.append(article_metrics)
+    
+# Merge this with existing article stats
+articles_allstats = pd.concat([articles_filtered, articles_analysed])
     
 # Plot distribution of analysed text
 fig = plt.figure()

@@ -5,7 +5,7 @@ import numpy as np
 import os 
 import matplotlib.pyplot as plt
 import seaborn as sns
-sns.set(style="ticks", color_codes=True)
+sns.set(style="ticks", color_codes=True, font_scale=0.8)
 
 
 # Define functions
@@ -25,19 +25,23 @@ def filter_articles(articles, n_publications, p_top):
         articles_filtered = DataFrame of filtered articles, keeping only the 
             columns to be used in further analysis.
     """
-    # Remove articles without an associated publication name. 
+    # Remove articles without an associated publication name, select only those 
+    # with data explicitly in the name
     articles = articles[articles.publicationname.notnull()]
+    articles = articles[articles["publicationname"].str.contains("Data")]
     
     # Construct list of unique publications, sort according to most prolific
     pub_count = articles.groupby(["publicationname"]).size().reset_index(
             name="counts")
     pub_count = pub_count.sort_values(["counts"],ascending=False)
+    print(pub_count.head())
     
     print("Initial input: {} articles across {} publications".format(
             len(articles),len(pub_count)))
     
     # Filter articles to get only those from the top publications
     top_pubs = pub_count["publicationname"][0:n_publications+1].values.tolist()
+    print(top_pubs)
     articles_filtered = articles[articles["publicationname"].isin(top_pubs)]
     
     # Remove duplicates identified based on identical post ID
@@ -51,9 +55,10 @@ def filter_articles(articles, n_publications, p_top):
     articles_filtered = articles_filtered.iloc[0:n_articles,:]
     
     # Pull out only the columns to be used in further analysis
-    articles_filtered = articles_filtered[["firstPublishedDatetime",
-                   "imageCount",
-                   "linksCount",
+    articles_filtered = articles_filtered[["postId",
+                  "firstPublishedDatetime",
+                  "imageCount",
+                  "linksCount",
                   "tagsCount",
                   "text",
                   "title",
@@ -70,14 +75,26 @@ def filter_articles(articles, n_publications, p_top):
     
     return articles_filtered
 
-# Import data
+# Import data, convert data types of specific columns as needed
 filedir_input = os.path.dirname(os.path.realpath('__file__'))
 filename_input = os.path.join('../data/raw/Medium_AggregatedData.csv')
 filename_input = os.path.abspath(os.path.realpath(filename_input))
 articles = pd.read_csv(filename_input)
+articles["firstPublishedDatetime"] = pd.to_datetime(
+        articles["firstPublishedDatetime"])
 
 # Filter articles
 articles_filtered = filter_articles(articles,5,0.1)
+
+# Convert datetimeobjects to hour of post for later plotting
+articles_timelist = []
+articles_filtered_timelist = []
+for i in range(0,len(articles)):
+    articles_timelist.append(
+            articles["firstPublishedDatetime"].iloc[i].time().hour)
+for i in range(0,len(articles_filtered)):
+    articles_filtered_timelist.append(
+            articles_filtered["firstPublishedDatetime"].iloc[i].time().hour)
 
 # Export filtered articles to new csv for faster import in later scripts
 filedir_output = os.path.dirname(os.path.realpath('__file__'))
@@ -85,12 +102,56 @@ filename_output = os.path.join('../data/processed/filtereddata.csv')
 filename_output = os.path.abspath(os.path.realpath(filename_output))
 articles_filtered.to_csv(path_or_buf=filename_output)
 
-# For initial visualization, pull numerical data for scatter matrix
+# Initial visualization: Difference in histograms of post characteristics 
+# between all and popular posts
+fig = plt.figure(figsize=(18,7))
+
+ax1a = fig.add_subplot(2,4,1)
+sns.distplot(articles_timelist,bins=24,kde=False)
+ax1a.set_ylabel('All Posts')
+
+ax1b = fig.add_subplot(2,4,5)
+sns.distplot(articles_filtered_timelist,bins=24,kde=False)
+ax1b.set_xlabel('Hour of Post')
+plt.xticks(np.arange(0, 25, 3)) 
+ax1b.set_ylabel('Popular Posts')
+
+ax2a = fig.add_subplot(2,4,2)
+sns.distplot(articles["tagsCount"],kde=False)
+ax2a.set_xlabel('')
+ax2a.set_xlim(0,5)
+
+ax2b = fig.add_subplot(2,4,6)
+sns.distplot(articles_filtered["tagsCount"],kde=False)
+ax2b.set_xlabel('Tags Added')
+ax2b.set_xlim(0,5)
+
+ax3a = fig.add_subplot(2,4,3)
+sns.distplot(articles["imageCount"],bins=100,kde=False)
+ax3a.set_xlabel('')
+ax3a.set_xlim(0,10)
+
+ax3b = fig.add_subplot(2,4,7)
+sns.distplot(articles_filtered["imageCount"],bins=25,kde=False)
+ax3b.set_xlabel('Images')
+ax3b.set_xlim(0,10)
+
+ax4a = fig.add_subplot(2,4,4)
+sns.distplot(articles["wordCount"],bins=200,kde=False)
+ax4a.set_xlabel('')
+ax4a.set_xlim(0,5000)
+
+ax4b = fig.add_subplot(2,4,8)
+sns.distplot(articles_filtered["wordCount"],bins=50,kde=False)
+ax4b.set_xlabel('Word Count')
+ax4b.set_xlim(0,5000)
+
+
+# Secondary visualization: correlation between post characteristics and 
+# popularity for filtered articles
 articles_selected = articles_filtered[["imageCount",
                                        "tagsCount",
                                        "wordCount",
                                        "totalClapCount"]]
-fig = plt.figure()
-sns.pairplot(articles_selected)
+sns.pairplot(articles_selected,height=2,aspect=1.5)
 plt.show()
-
