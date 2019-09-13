@@ -20,6 +20,7 @@ def filter_articles(articles, n_publications, p_top):
             posts to filter based on
         pTop = Percentage threshold for most popular articles (evaluated based 
             on number of total claps) 
+        titlekeyword = Word to look for in the title
         
     Outputs:
         articles_filtered = DataFrame of filtered articles, keeping only the 
@@ -63,6 +64,8 @@ def filter_articles(articles, n_publications, p_top):
                   "text",
                   "title",
                   "wordCount",
+                  "codeBlock",
+                  "codeBlockCount",
                   "publicationname",
                   "totalClapCount",
                   "recommends",
@@ -130,14 +133,12 @@ ax2b.set_xlabel('Tags Added')
 ax2b.set_xlim(0,5)
 
 ax3a = fig.add_subplot(2,4,3)
-sns.distplot(articles["imageCount"],bins=100,kde=False)
+sns.distplot(articles["codeBlockCount"],bins=100,kde=False)
 ax3a.set_xlabel('')
-ax3a.set_xlim(0,10)
 
 ax3b = fig.add_subplot(2,4,7)
-sns.distplot(articles_filtered["imageCount"],bins=25,kde=False)
-ax3b.set_xlabel('Images')
-ax3b.set_xlim(0,10)
+sns.distplot(articles_filtered["codeBlockCount"],bins=25,kde=False)
+ax3b.set_xlabel('Code Blocks')
 
 ax4a = fig.add_subplot(2,4,4)
 sns.distplot(articles["wordCount"],bins=200,kde=False)

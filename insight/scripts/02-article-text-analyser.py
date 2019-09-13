@@ -6,6 +6,7 @@ import pandas as pd # matrices
 import numpy as np # matrices
 import matplotlib.pyplot as plt # plotting
 import seaborn as sns # plotting
+sns.set(style="ticks", color_codes=True, font_scale=1)
 import os # file paths
 import nltk # NLP
 from nltk.corpus import stopwords
