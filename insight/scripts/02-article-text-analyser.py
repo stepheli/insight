@@ -85,12 +85,14 @@ class ArticleTextAnalyser:
         word_repeated_count = word_repeated.sort_values(
                 ["counts"],ascending=False) # count repeated words
         u_words = len(word_repeated_count) # determine number of unique words
-                
+        
+      
         # Average length of word
         lengths = []
-        for word in word_repeated_count.values.tolist():
-            lengths.append(len(word))
-        a_word_length = int(np.mean(lengths))
+        for i in range(0,len(self.words)):
+            lengths.append(len(self.words[i]))
+        
+        a_word_length = np.mean(lengths)
         
         analysed_words = [n_words, u_words, a_word_length]
                 
@@ -127,8 +129,33 @@ for i in range(0,len(articles_filtered)):
                                           articles_filtered["text"].iloc[i]).article_metrics()
     articles_analysed = articles_analysed.append(article_metrics)
     
-# Merge this with existing article stats
-articles_allstats = pd.concat([articles_filtered, articles_analysed])
+## Merge this with existing article stats
+#articles_allstats = pd.concat([articles_filtered, articles_analysed])
+
+# Distribution plots of new metrics
+fig = plt.figure(figsize=(18,7))
+
+ax1 = fig.add_subplot(2,3,1)
+sns.distplot(articles_analysed["n_sentences"])
+ax1.set_xlabel("Sentences")
+
+ax2 = fig.add_subplot(2,3,2)
+sns.distplot(articles_analysed["a_sentence_length"])
+ax2.set_xlabel("Average sentence length (words)")
+
+ax4 = fig.add_subplot(2,3,4)
+sns.distplot(articles_analysed["n_words"])
+ax4.set_xlabel("Word Count")
+
+ax5 = fig.add_subplot(2,3,5)
+sns.distplot(articles_analysed["u_words"])
+ax5.set_xlabel("Unique Words")
+
+ax6 = fig.add_subplot(2,3,6)
+sns.distplot(articles_analysed["a_word_length"])
+ax6.set_xlabel("Average word length (characters)")
+
+plt.subplots_adjust(wspace=0.3,hspace=0.3)
     
 # Plot distribution of analysed text
 fig = plt.figure()

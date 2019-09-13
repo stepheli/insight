@@ -5,7 +5,7 @@ import numpy as np
 import os 
 import matplotlib.pyplot as plt
 import seaborn as sns
-sns.set(style="ticks", color_codes=True, font_scale=0.8)
+sns.set(style="ticks", color_codes=True, font_scale=1)
 
 
 # Define functions
@@ -74,8 +74,8 @@ def filter_articles(articles, n_publications, p_top):
     print("{} articles remaining".format(len(articles_filtered)))    
     
     return articles_filtered
-
-# Import data, convert data types of specific columns as needed
+    
+# Import data
 filedir_input = os.path.dirname(os.path.realpath('__file__'))
 filename_input = os.path.join('../data/raw/Medium_AggregatedData.csv')
 filename_input = os.path.abspath(os.path.realpath(filename_input))
@@ -96,6 +96,8 @@ for i in range(0,len(articles_filtered)):
     articles_filtered_timelist.append(
             articles_filtered["firstPublishedDatetime"].iloc[i].time().hour)
 
+
+
 # Export filtered articles to new csv for faster import in later scripts
 filedir_output = os.path.dirname(os.path.realpath('__file__'))
 filename_output = os.path.join('../data/processed/filtereddata.csv')
@@ -108,12 +110,13 @@ fig = plt.figure(figsize=(18,7))
 
 ax1a = fig.add_subplot(2,4,1)
 sns.distplot(articles_timelist,bins=24,kde=False)
+plt.xticks(np.arange(0, 25, 6)) 
 ax1a.set_ylabel('All Posts')
 
 ax1b = fig.add_subplot(2,4,5)
 sns.distplot(articles_filtered_timelist,bins=24,kde=False)
 ax1b.set_xlabel('Hour of Post')
-plt.xticks(np.arange(0, 25, 3)) 
+plt.xticks(np.arange(0, 25, 6)) 
 ax1b.set_ylabel('Popular Posts')
 
 ax2a = fig.add_subplot(2,4,2)
@@ -146,6 +149,7 @@ sns.distplot(articles_filtered["wordCount"],bins=50,kde=False)
 ax4b.set_xlabel('Word Count')
 ax4b.set_xlim(0,5000)
 
+plt.subplots_adjust(wspace=0.4)
 
 # Secondary visualization: correlation between post characteristics and 
 # popularity for filtered articles
