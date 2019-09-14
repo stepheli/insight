@@ -8,17 +8,16 @@ import seaborn as sns
 sns.set(style="ticks", color_codes=True, font_scale=1)
 
 
-# Define functions
-def filter_articles(articles, n_publications, p_top):
+def filter_articles_publications(articles, n_publications, p_top):
     """ 
     From a large DataFrame of posts from Medium-affiliated publications, 
-    extract those from the most popular articles and publications.
+    extract those from the most prolific publications.
     
     Arguments:
         articles = DataFrame containing post info
-        nPublications = Number of publications with the most number of total 
+        n_publications = Number of publications with the most number of total 
             posts to filter based on
-        pTop = Percentage threshold for most popular articles (evaluated based 
+        p_top = Percentage threshold for most popular articles (evaluated based 
             on number of total claps) 
         titlekeyword = Word to look for in the title
         
@@ -77,6 +76,61 @@ def filter_articles(articles, n_publications, p_top):
     print("{} articles remaining".format(len(articles_filtered)))    
     
     return articles_filtered
+
+def filter_articles_codeblocks(articles, n_codeblocks, p_top):
+    """ 
+    From a large DataFrame of posts from Medium-affiliated publications, 
+    extract the most popular posts which also contain code.
+    
+    Arguments:
+        articles = DataFrame containing post info
+        n_codeblocks = Minimum number of codeblocks in post 
+        p_top = Percentage threshold for most popular articles (evaluated based 
+            on number of total claps) 
+        titlekeyword = Word to look for in the title
+        
+    Outputs:
+        articles_filtered = DataFrame of filtered articles, keeping only the 
+            columns to be used in further analysis.
+    """
+    # Remove articles without an associated publication name, select only those 
+    # with data explicitly in the name
+    articles = articles[articles.publicationname.notnull()]
+    
+    print("Initial input: {} articles".format(len(articles)))
+    
+    # Remove articles without sufficient codeblocks
+    articles_filtered = articles[articles["codeBlockCount"] >= n_codeblocks]
+            
+    # Filter articles to get only those that are most popular
+    articles_filtered = articles_filtered.drop_duplicates(subset="postId", keep='first')
+    n_articles = int(np.ceil(p_top*len(articles_filtered)))
+    articles_filtered = articles_filtered.sort_values(["totalClapCount"],
+                                                    ascending=False)
+    articles_filtered = articles_filtered.iloc[0:n_articles,:]
+    
+    # Pull out only the columns to be used in further analysis
+    articles_filtered = articles_filtered[["postId",
+                  "firstPublishedDatetime",
+                  "imageCount",
+                  "linksCount",
+                  "tagsCount",
+                  "text",
+                  "title",
+                  "wordCount",
+                  "codeBlock",
+                  "codeBlockCount",
+                  "publicationname",
+                  "totalClapCount",
+                  "recommends",
+                  "responsesCreatedCount"]]
+    
+    print(" ")
+    print("Filter settings: Most popular {}% with minimum {} codeblock".format(
+            p_top*100, n_codeblocks))
+    print("{} articles remaining".format(len(articles_filtered)))    
+    
+    return articles_filtered
     
 # Import data
 filedir_input = os.path.dirname(os.path.realpath('__file__'))
@@ -87,7 +141,12 @@ articles["firstPublishedDatetime"] = pd.to_datetime(
         articles["firstPublishedDatetime"])
 
 # Filter articles
-articles_filtered = filter_articles(articles,5,0.1)
+articles_filtered = filter_articles_codeblocks(articles,1,1)
+
+# Duplicate the column containing a unique identifier (postId) so it can be 
+# called directly later, then set it as the DF index
+articles_filtered["postId2"] = articles_filtered["postId"]
+articles_filtered.set_index("postId",inplace=True)
 
 # Convert datetimeobjects to hour of post for later plotting
 articles_timelist = []
@@ -98,8 +157,6 @@ for i in range(0,len(articles)):
 for i in range(0,len(articles_filtered)):
     articles_filtered_timelist.append(
             articles_filtered["firstPublishedDatetime"].iloc[i].time().hour)
-
-
 
 # Export filtered articles to new csv for faster import in later scripts
 filedir_output = os.path.dirname(os.path.realpath('__file__'))
@@ -154,8 +211,7 @@ plt.subplots_adjust(wspace=0.4)
 
 # Secondary visualization: correlation between post characteristics and 
 # popularity for filtered articles
-articles_selected = articles_filtered[["imageCount",
-                                       "tagsCount",
+articles_selected = articles_filtered[["codeBlockCount",
                                        "wordCount",
                                        "totalClapCount"]]
 sns.pairplot(articles_selected,height=2,aspect=1.5)
