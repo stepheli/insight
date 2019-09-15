@@ -93,9 +93,10 @@ def filter_articles_codeblocks(articles, n_codeblocks, p_top):
         articles_filtered = DataFrame of filtered articles, keeping only the 
             columns to be used in further analysis.
     """
-    # Remove articles without an associated publication name, select only those 
-    # with data explicitly in the name
+    # Preliminary cleaning: remove articles with a missing publication name or
+    # not in English
     articles = articles[articles.publicationname.notnull()]
+    articles = articles[articles["language"] == "en"]
     
     print("Initial input: {} articles".format(len(articles)))
     
