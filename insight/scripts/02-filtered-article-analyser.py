@@ -148,11 +148,21 @@ class ArticleCodeAnalyser:
         if any(keyword in self.words for keyword in python_keywords):
             detected_language = 1 # Python
         if any(keyword in self.words for keyword in javascript_keywords):
-            detected_language = 2 # Javascript
+            # Avoid confusion with 'for var in vars' syntax; given dominance of
+            # Python articles, do not overwrite a Python assignment
+            if detected_language > 0: 
+                pass
+            else:
+                detected_language = 2 # Javascript
         if any(keyword in self.words for keyword in cmdline_keywords):
             detected_language = 3 # cmdline
         if any(keyword in self.words for keyword in sql_keywords):
-            detected_language = 4 # SQL
+            # Some flavours of SQL share # as the comment character. Given 
+            # dominance of Python articles, do not overwrite a Python assignment
+            if detected_language > 0:
+                pass
+            else:
+                detected_language = 4 # SQL
             
         return detected_language
       
