@@ -9,11 +9,11 @@ import numpy as np
 from datetime import datetime
 
 ## NLP & Machine Learning
-#import nltk
-#from nltk.stem import WordNetLemmatizer
-#from nltk.tokenize import WhitespaceTokenizer
-#from sklearn.feature_extraction.text import CountVectorizer
-#from joblib import load
+import nltk
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import WhitespaceTokenizer
+from sklearn.feature_extraction.text import CountVectorizer
+from joblib import load
 import string
 
 # Plotting
@@ -398,7 +398,7 @@ plt.axvline(x = article_draft["a_comment_length"].values,
 ax6.set_xlabel("Av. Comment Length")
 
 ax7 = fig.add_subplot(gs[2,2])
-sns.distplot(articles_timelist, kde=False, bins=24, color="m")
+sns.distplot(articles_timelist, kde=False, bins=24, color="g")
 plt.axvline(x = article_draft_time, 
             ymin = 0, ymax = 1, color = 'r', linewidth = 2)
 ax7.set_xlabel("Time of Day")

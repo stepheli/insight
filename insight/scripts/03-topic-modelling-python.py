@@ -215,3 +215,9 @@ fig.subplots_adjust(bottom=0.3)
 ## Save model for later use
 model_filename = 'python_articles_LDA.joblib'
 dump(model_alpha, model_filename)
+
+#$ Save DF with labelled topics to CSV
+filedir_output = os.path.dirname(os.path.realpath('__file__'))
+filename_python_output = os.path.join('../data/processed/articles_python_topics.csv')
+filename_python_output = os.path.abspath(os.path.realpath(filename_python_output))
+articles_python.to_csv(path_or_buf=filename_python_output)
