@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Drafting Board</title>
+
+    <!-- Bootstrap Core CSS -->
+    <link href="../static/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom Fonts -->
+    <link href="../static/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,300italic,400italic,700italic" rel="stylesheet" type="text/css">
+    <link href="../static/vendor/simple-line-icons/css/simple-line-icons.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="../static/css/stylish-portfolio.min.css" rel="stylesheet">
+
+  </head>
+
+  <body id="page-top">
+
+  <!-- Header -->
+    <header class="masthead d-flex">
+      <div class="container text-center my-auto">
+        <h1 class="mb-1">DraftingBoard</h1>
+        <h3 class="mb-5">
+          <em>Write better blog posts.</em>
+        </h3>
+        
+		
+		      <div class="container">
+        <hr class="star-light mb-5">
+              <div class="col-sm m-3 text-center">
+                    <form action="/output" method="GET" id="user_input">
+                          <textarea rows="6" cols="60" name='user_input' id="user_input" placeholder="Enter your text here.">
+						  </textarea><br>
+                    </form>
+              </div>
+       <div class="row justify-content-center">
+             <button type="submit" class="btn btn-secondary btn-lg" form="user_input">Go!</button>
+      </div>
+      
+      {% if my_form_result=='Empty' %}
+      <div class="row mt-4 justify-content-center">
+            <h4 class="text-danger text-center text-uppercase">Brevity is the soul of wit, but there is nothing to analyse here!</h4>
+      </div>
+
+      {% elif my_form_result=='NotEmpty' %}     
+
+      <div class="row mt-4 justify-content-center">
+            <h4 class="text-light text-center text-uppercase">Your Post:</h4>
+      </div>
+      <div class="row p-1 m-1 justify-content-center">
+            <div class="col-md- w-50 list-group">
+                   <ul class="list-group">
+                   <h4 class="text-center">
+                   <li class="list-group-item d-flex justify-content-between align-items-center active">
+                             <b>{{my_input}}</b> 
+                             
+                            <span class="badge badge-primary badge-pill">{{my_number}} followers</span>
+                          </li>
+                        </h4>
+                  </ul>
+            </div>
+            <div class="col">
+            <img src="{{ url_for('static', filename = my_img_name) }}" width=500 height=416> 
+            </div>      
+      </div>
+
+      {% else %}
+      {% endif %}      
+      </div>
+		
+		
+		
+      </div>
+      <div class="overlay"></div>
+    </header>
+    
+
+    <!-- Footer -->
+    <footer class="footer text-center">
+      <div class="container">
+        <p class="text-muted small mb-0">&copy; Lisa Stephens 2019</p>
+      </div>
+    </footer>
+
+    <!-- Scroll to Top Button-->
+    <a class="scroll-to-top rounded js-scroll-trigger" href="#page-top">
+      <i class="fas fa-angle-up"></i>
+    </a>
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="../static/vendor/jquery/jquery.min.js"></script>
+    <script src="../static/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Plugin JavaScript -->
+    <script src="../static/vendor/jquery-easing/jquery.easing.min.js"></script>
+
+    <!-- Custom scripts for this template -->
+    <script src="../static/js/stylish-portfolio.min.js"></script>
+
+  </body>
+
+</html>

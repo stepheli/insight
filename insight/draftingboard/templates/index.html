@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Drafting Board</title>
+
+    <!-- Bootstrap Core CSS -->
+    <link href="../static/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom Fonts -->
+    <link href="../static/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,300italic,400italic,700italic" rel="stylesheet" type="text/css">
+    <link href="../static/vendor/simple-line-icons/css/simple-line-icons.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="../static/css/stylish-portfolio.min.css" rel="stylesheet">
+
+  </head>
+
+  <body id="page-top">
+
+  <!-- Header -->
+    <header class="masthead d-flex">
+      <div class="container text-center my-auto">
+        <h1 class="mb-1">DraftingBoard</h1>
+        <h3 class="mb-5">
+          <em>Write better blog posts.</em>
+        </h3>
+        
+		
+		      <div class="container">
+        <hr class="star-light mb-5">
+              <div class="col-sm m-3 text-center">
+                    <form action="/output" method="POST" id="user_input">
+                          <textarea rows="6" cols="60" name='user_input' id="user_input" placeholder="Enter your text here."></textarea><br>
+                    </form>
+              </div>
+       <div class="row justify-content-center">
+             <button type="submit" class="btn btn-secondary btn-lg" form="user_input">Go!</button>
+      </div>
+      
+      {% if my_form_result=='Empty' %}
+      <div class="row mt-4 justify-content-center">
+            <h4 class="text-danger text-center text-uppercase">Brevity is the soul of wit, but there is nothing to analyse here!</h4>
+      </div>
+
+      {% elif my_form_result=='NotEmpty' %}     
+
+      <div class="row mt-4 justify-content-center">
+            <h4 class="text-light text-center text-uppercase">Your Post:</h4>
+      </div>
+
+	  <div class="row">
+            <!-- Column 1 -->
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Draft</div>
+                      <div class="h5 mb-0 text-gray-800">
+					  
+					  <!-- Output returned here: copy of input text -->
+					  <div class="h5 mb-0 text-gray-800">
+					  {{my_input}}
+					  </div>
+					  
+					  </div>
+	 
+					  
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Column 2 -->
+            <div class="col-xl-5 col-md-6 mb-4">
+              <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Analytics</div>
+                      <div class="h5 mb-0 text-gray-800">Still to come...</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Column 3 -->
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Similar Articles</div>
+                      <div class="row no-gutters align-items-center">
+                        <div class="col-auto">
+                          <div class="h5 mb-0 mr-3 text-gray-800">Still to come...</div>
+                        </div>
+                        <div class="col">
+                          <div class="progress progress-sm mr-2">
+                            <div class="progress-bar bg-info" role="progressbar" style="width: 50%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+	  </div>
+
+
+      {% else %}
+      {% endif %}      
+      </div>
+		
+		
+		
+      </div>
+      <div class="overlay"></div>
+    </header>
+    
+
+    <!-- Scroll to Top Button-->
+    <a class="scroll-to-top rounded js-scroll-trigger" href="#page-top">
+      <i class="fas fa-angle-up"></i>
+    </a>
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="../static/vendor/jquery/jquery.min.js"></script>
+    <script src="../static/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Plugin JavaScript -->
+    <script src="../static/vendor/jquery-easing/jquery.easing.min.js"></script>
+
+    <!-- Custom scripts for this template -->
+    <script src="../static/js/stylish-portfolio.min.js"></script>
+
+  </body>
+
+</html>
