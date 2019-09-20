@@ -1,0 +1,42 @@
+<title> DraftingBoard: A tool for optimizing blog posts </title>
+
+<p> Writing clean code is hard, but writing clean text about clean code can be even more challenging. This tool is designed to take a look at the content of the first draft of a blog post which contains both text and code and offer suggestions about what to be improved to make it more accessible. For both authors and website hosts, this offers benefits in terms of higher readership, engagement, and advertising revenue.</p> 
+
+<p> These suggestions are made through comparison of a prospective post to a database of previously published data science articles on the Medium platform. This analysis is based on natural language processing pipelines developed to process the code and text content of an article in order to calculate analytical metrics, perform topic modelling (unsupervised learning using LDA), and implement a regression model (supervised learning).</p>
+
+<p> Here's a sample code snippet for analysis.
+<code>
+import pandas as pd 
+
+for line in self.lines:
+# Reset tracking variables
+line_code = 0
+line_comment = 0
+
+# If the comment character is not present, assume line of code
+if line.find(commentchar) == -1:
+	 line_code = 1
+# If a comment character is present, determine where it falls to see if line is a pure comment, or mixed code + comment
+else:
+	 comment_start = line.index(commentchar)
+	 if comment_start == 0:
+		 line_code = 0
+		 line_comment = 1
+	 elif comment_start > 0:
+		 alphanum_check = line[0:comment_start].isalnum()
+		 if alphanum_check == 0:
+			 line_code = 0
+			 line_comment = 1
+		 else:
+			 line_code = 1
+			 line_comment = 1
+line_containscode.append(line_code)
+line_containscomment.append(line_comment)
+</code>
+
+<p> For an imported code that has already been divided into lines, the decision tree in the code above is used to determine whether a particular line contains pure code, pure comment, or mixed code and comment. 
+
+<code>
+# A second code block is used to test the code.
+list = [1,2,3]
+</code>

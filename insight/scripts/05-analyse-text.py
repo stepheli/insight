@@ -406,3 +406,5 @@ ax7.set_xlabel("Time of Day")
 
 plt.subplots_adjust(wspace=0.35,hspace=0.4,top=0.9)
     
+# Pickle pandas frame
+articles_python.to_pickle('../draftingboard/draftingboard/articles_python')

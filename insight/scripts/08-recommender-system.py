@@ -27,6 +27,7 @@ articles_all = pd.read_csv(filename_input1, index_col = 'postId')
 filename_input2 = os.path.join('../data/processed/articles_python.csv')
 filename_input2 = os.path.abspath(os.path.realpath(filename_input2))
 articles_all = articles_all.append(pd.read_csv(filename_input2, index_col = 'postId'))
+articles_all = articles_all.drop_duplicates(subset="title",keep="first")
 
 # Process text column to construct tfidf_matrix as input for cosine similarity
 topic_frequency = TfidfVectorizer(analyzer = 'word',
