@@ -316,6 +316,8 @@ print("Original article: {}".format(articles_all["title"].iloc[article_test]))
 print(" ")
 print(recommend(article_test, cosine_similarity))
 
+output_test = recommend(article_test,cosine_similarity)
+
 # Set up bins of predefined size for later histograms
 bins_words = np.arange(0,5001,250)
 bins_sentencelengths = np.arange(0,41,2.5)
@@ -377,3 +379,5 @@ ax7.set_xlabel("Time of Day")
 
 plt.subplots_adjust(wspace=0.35,hspace=0.4,top=0.9)
     
+# Pickle pandas frame
+articles_all.to_pickle('../draftingboard/draftingboard/articles_all')

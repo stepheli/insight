@@ -403,8 +403,14 @@ plt.axvline(x = article_draft_time,
             ymin = 0, ymax = 1, color = 'r', linewidth = 2)
 ax7.set_xlabel("Time of Day")
 
-
 plt.subplots_adjust(wspace=0.35,hspace=0.4,top=0.9)
     
-# Pickle pandas frame
-articles_python.to_pickle('../draftingboard/draftingboard/articles_python')
+# Refine articles against popular threshold and pickle pandas frame
+articles_python = articles_python.sort_values(by=["totalClapCount"],ascending=False)
+articles_python = articles_python.dropna()
+threshold = 0.25
+n_articles = int(np.ceil(threshold*len(articles_python)))
+
+articles_python_popular = articles_python[0:n_articles][:]
+
+articles_python_popular.to_pickle('../draftingboard/draftingboard/articles_python_popular.pickle')

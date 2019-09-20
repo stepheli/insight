@@ -21,3 +21,5 @@ else:
 		 line_code = 0
 		 line_comment = 1
 </code>
+
+<img src = "testing.jpg">

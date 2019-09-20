@@ -14,9 +14,6 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import seaborn as sns
 sns.set(style="ticks", color_codes=True, font_scale=0.95)
-
-def link_test():
-	return 'Hello from the function'
 	
 def master_function(user_input):
 	article_raw = user_input
@@ -24,9 +21,9 @@ def master_function(user_input):
 	article_draft = SingleArticleParser(article_raw).article_processed
 	article_draft["firstPublishedDatetime"] = pd.to_datetime(article_draft["firstPublishedDatetime"])
 	
-	articles_python = pd.read_pickle('articles_python.pickle')
+	articles_python = pd.read_pickle('articles_python_popular.pickle')
     	
-	output_figure = generate_figure(article_draft, articles_python)
+	generate_figure(article_draft, articles_python)
 	
 def generate_figure(article_draft, articles_python):
 	article_draft = article_draft
@@ -95,10 +92,10 @@ def generate_figure(article_draft, articles_python):
 	plt.axvline(x = article_draft_time, 
 				ymin = 0, ymax = 1, color = 'r', linewidth = 2)
 	ax7.set_xlabel("Time of Day")
-
+	
 
 	plt.subplots_adjust(wspace=0.35,hspace=0.4,top=0.9)
-	plt.savefig('static/img/output')
+	plt.savefig('static/img/output',bbox_inches='tight')
 
 	
 class SingleArticleParser:
@@ -180,17 +177,31 @@ class SingleArticleParser:
         
         soup = BeautifulSoup(self.article_raw,"html.parser")
         
-        title = soup.title.string
+        try:
+            title = soup.title.string
+        except:
+            title = 'nan'
         
-        text_all = str(' ')
-        text_blocks = soup.findAll('p')
-        for i in range(0,len(text_blocks)):
-            text_all = text_all + str(text_blocks[i].contents)[3:-3] + str(' ')
-            
-        code_all = str(' ')
-        code_blocks = soup.findAll('code')
-        for i in range(0,len(code_blocks)):
-            code_all = code_all + str(code_blocks[i].contents)[2:-2]
+        try:
+            text_all = str(' ')
+            text_blocks = soup.findAll('p')
+            for i in range(0,len(text_blocks)):
+                text_all = text_all + str(text_blocks[i].contents)[3:-3] + str(' ')
+        except:
+            text_all = 'nan'
+        
+        try:
+            code_all = str(' ')
+            code_blocks = soup.findAll('code')
+            for i in range(0,len(code_blocks)):
+                code_all = code_all + str(code_blocks[i].contents)[2:-2]
+        except:
+            code_all = 'nan'
+			
+        try:
+            imagesCount = soup.findAll('img')
+        except:
+            imagesCount = float('nan')
             
         time_present = datetime.now()
         time_string = time_present.strftime("%Y-%m-%d %I:%M:%S %p")
@@ -199,8 +210,9 @@ class SingleArticleParser:
                                            'text' : text_all,
                                            'codeBlock' : code_all,
                                            'firstPublishedDatetime' : time_string,
-                                           'postId' : 'draft_article'}],
-                             columns = ["title","text","codeBlock","firstPublishedDatetime","postId"],
+                                           'postId' : 'draft_article',
+										   'imagesCount' : imagesCount}],
+                             columns = ["title","text","codeBlock","firstPublishedDatetime","postId","imagesCount"],
                              index = ['draft_article'])
             
         return article_processed       

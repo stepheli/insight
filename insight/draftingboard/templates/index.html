@@ -67,7 +67,7 @@
                       <div class="h5 mb-0 text-gray-800">
 					  
 					  <!-- Output returned here: copy of input text -->
-					  <div class="text-xs h6 mb-0 text-gray-800 overflow-auto" style="height: 75px">
+					  <div class="text-xs h6 mb-0 text-gray-800 overflow-auto" style="height: 75px overflow: scroll">
 					  {{my_input}}
 					  </div>
 					  
@@ -83,7 +83,7 @@
             <!-- Column 2 -->
             <div class="col-xl-7 col-md-6 mb-4">
               <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
+                <div class="card-body" style="vertical-align:text-top overflow-y:scroll">
                   <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                       <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Analytics</div>
@@ -104,26 +104,52 @@
 			</div>
 		    <div class="row">
             <!-- Column 3 -->
-            <div class="col-xl-3 col-md-6 mb-4">
+            <div class="col-xl-5 col-md-6 mb-4">
               <div class="card border-left-info shadow h-100 py-2">
                 <div class="card-body">
                   <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                       <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Similar Articles</div>
                       <div class="row no-gutters align-items-center">
-                        <div class="col-auto">
-                          <div class="h5 mb-0 mr-3 text-gray-800">Still to come...</div>
                         </div>
                         <div class="col">
                           <div class="progress progress-sm mr-2">
-                            <div class="progress-bar bg-info" role="progressbar" style="width: 50%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                            <div class="progress-bar bg-info" role="progressbar" style="width: 50%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"><br></br></div>
                           </div>
-                        </div>
+						 
+                          <div class="h6 mb-0 mr-3 text-gray-800" align="left" style=100%>
+						  <p><b>Article 1:</b> {{article1}}</p>
+						  <p><b>Article 2:</b> {{article2}}</p>
+						  <p><b>Article 3:</b> {{article3}}</p>
+						  </div>
+                       
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
+            </div>
+			
+			<!-- Column 4 -->
+            <div class="col-xl-7 col-md-6 mb-4">
+              <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body" style="vertical-align:text-top overflow-y:scroll">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Sugestions</div>
+					  
+					<div class="text-xs h6 mb-0 text-gray-800 overflow-auto" style="height: 75px overflow: scroll">
+					Still to come...
+					</div>
+					  
+					</div>						
+                    </div>
+                  </div>			
+                </div>
+
+				
+              </div>
+			  
             </div>
 
 	  </div>
