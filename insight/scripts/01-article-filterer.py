@@ -124,6 +124,7 @@ def filter_articles_codeblocks(articles, n_codeblocks, p_top):
                   "publicationname",
                   "totalClapCount",
                   "recommends",
+                  "url",
                   "responsesCreatedCount"]]
     
     print(" ")

@@ -243,11 +243,20 @@ def recommend(index, method):
     similarity_scores = list(enumerate(method[id]))
     similarity_scores = sorted(similarity_scores, key=lambda x: x[1], reverse=True)
     similarity_scores = similarity_scores[1:6]
+    print(similarity_scores)
     
     articles_index = [i[0] for i in similarity_scores]
     
-    #Return the top 5 most similar books using integar-location based indexing (iloc)
+    # eturn the top 5 most similar books using integar-location based indexing (iloc)
     return articles_all['title'].iloc[articles_index]
+
+# Function used for testing output types/shapes only
+def recommend2(index, method):
+    id = indices[index]
+    similarity_scores = list(enumerate(method[id]))
+    similarity_scores = sorted(similarity_scores, key=lambda x: x[1], reverse=True)
+
+    return similarity_scores
 
 # Set up file path to draft article
 filedir_draft = os.path.dirname(os.path.realpath('__file__'))
@@ -300,84 +309,92 @@ articles_all = articles_all.drop_duplicates(subset="title",keep="first")
 
 articles_all = articles_all.append(article_draft)
 
-# Process text column to construct tfidf_matrix as input for cosine similarity
-topic_frequency = TfidfVectorizer(analyzer = 'word',
-                                 min_df = 1,
-                                 stop_words = 'english')
-tfidf_matrix = topic_frequency.fit_transform(articles_all["text"])
-
-cosine_similarity = linear_kernel(tfidf_matrix, tfidf_matrix) 
-
-articles_all = articles_all.reset_index(drop=True)
-indices = pd.Series(articles_all["text"].index)
-
-article_test = len(articles_all) - 1
-print("Original article: {}".format(articles_all["title"].iloc[article_test]))
-print(" ")
-print(recommend(article_test, cosine_similarity))
-
-output_test = recommend(article_test,cosine_similarity)
-
-# Set up bins of predefined size for later histograms
-bins_words = np.arange(0,5001,250)
-bins_sentencelengths = np.arange(0,41,2.5)
-bins_ratiocodecomment = np.arange(0,31,2.5)
-bins_a_comment_length = np.arange(0,101,5)
-
-fig = plt.figure(figsize=(12,7))
-gs = fig.add_gridspec(3,5)
-
-
-ax2 = fig.add_subplot(gs[0,2])
-sns.distplot(articles_python["n_sentences"].dropna(),
-             kde=False, bins = bins_a_comment_length)
-plt.axvline(x = article_draft["n_sentences"].values, 
-            ymin = 0, ymax = 1, color = 'r', linewidth = 2)
-ax2.set_xlabel("Sentence Count")
-
-ax2 = fig.add_subplot(gs[0,3])
-sns.distplot(articles_python["n_words"].dropna(),
-             kde=False, bins = bins_words)
-plt.axvline(x = article_draft["n_words"].values, 
-            ymin = 0, ymax = 1, color = 'r', linewidth = 2)
-ax2.set_xlabel("Word Count")
-
-ax3 = fig.add_subplot(gs[0,4])
-sns.distplot(articles_python["a_sentence_length"].dropna(),
-             kde=False, bins = bins_sentencelengths)
-plt.axvline(x = article_draft["a_sentence_length"].values, 
-            ymin = 0, ymax = 1, color = 'r', linewidth = 2)
-ax3.set_xlabel("Sentence Length (Words)")
-
-ax4 = fig.add_subplot(gs[1,2])
-sns.distplot(articles_python["ratio_codecomment"].dropna(),
-             kde=False, bins=bins_ratiocodecomment,color="r")
-plt.axvline(x = article_draft["ratio_codecomment"].values, 
-            ymin = 0, ymax = 1, color = 'r', linewidth = 2)
-ax4.set_xlabel("Code/Comment Ratio")
-
-ax5 = fig.add_subplot(gs[1,3])
-sns.distplot(articles_python["a_code_length"].dropna(),
-             kde=False, bins = bins_a_comment_length,color="r")
-plt.axvline(x = article_draft["a_code_length"].values, 
-            ymin = 0, ymax = 1, color = 'r', linewidth = 2)
-ax5.set_xlabel("Av. Code Line Length")
-
-ax6 = fig.add_subplot(gs[1,4])
-sns.distplot(articles_python["a_comment_length"].dropna(),
-             kde=False, bins = bins_a_comment_length,color="r")
-plt.axvline(x = article_draft["a_comment_length"].values, 
-            ymin = 0, ymax = 1, color = 'r', linewidth = 2)
-ax6.set_xlabel("Av. Comment Length")
-
-ax7 = fig.add_subplot(gs[2,2])
-sns.distplot(articles_timelist, kde=False, bins=24, color="g")
-plt.axvline(x = article_draft_time, 
-            ymin = 0, ymax = 1, color = 'r', linewidth = 2)
-ax7.set_xlabel("Time of Day")
-
-
-plt.subplots_adjust(wspace=0.35,hspace=0.4,top=0.9)
+## Process text column to construct tfidf_matrix as input for cosine similarity
+#topic_frequency = TfidfVectorizer(analyzer = 'word',
+#                                 min_df = 1,
+#                                 stop_words = 'english')
+#tfidf_matrix = topic_frequency.fit_transform(articles_all["text"])
+#
+#cosine_similarity = linear_kernel(tfidf_matrix, tfidf_matrix) 
+#
+#articles_all = articles_all.reset_index(drop=True)
+#indices = pd.Series(articles_all["text"].index)
+#
+#article_test = len(articles_all) - 1
+#print("Original article: {}".format(articles_all["title"].iloc[article_test]))
+#print(" ")
+#print(recommend(article_test, cosine_similarity))
+#
+#output_test = recommend(article_test,cosine_similarity)
+#similarity_scores = recommend2(article_test,cosine_similarity)
+#similarity_scores_values = []
+#for i in range(0,len(similarity_scores)):
+#    if similarity_scores[i][1] < 0.999:
+#        similarity_scores_values.append(similarity_scores[i][1])
+#test = np.mean(similarity_scores_values)
+#
+#
+#
+## Set up bins of predefined size for later histograms
+#bins_words = np.arange(0,5001,250)
+#bins_sentencelengths = np.arange(0,41,2.5)
+#bins_ratiocodecomment = np.arange(0,31,2.5)
+#bins_a_comment_length = np.arange(0,101,5)
+#
+#fig = plt.figure(figsize=(12,7))
+#gs = fig.add_gridspec(3,5)
+#
+#
+#ax2 = fig.add_subplot(gs[0,2])
+#sns.distplot(articles_python["n_sentences"].dropna(),
+#             kde=False, bins = bins_a_comment_length)
+#plt.axvline(x = article_draft["n_sentences"].values, 
+#            ymin = 0, ymax = 1, color = 'r', linewidth = 2)
+#ax2.set_xlabel("Sentence Count")
+#
+#ax2 = fig.add_subplot(gs[0,3])
+#sns.distplot(articles_python["n_words"].dropna(),
+#             kde=False, bins = bins_words)
+#plt.axvline(x = article_draft["n_words"].values, 
+#            ymin = 0, ymax = 1, color = 'r', linewidth = 2)
+#ax2.set_xlabel("Word Count")
+#
+#ax3 = fig.add_subplot(gs[0,4])
+#sns.distplot(articles_python["a_sentence_length"].dropna(),
+#             kde=False, bins = bins_sentencelengths)
+#plt.axvline(x = article_draft["a_sentence_length"].values, 
+#            ymin = 0, ymax = 1, color = 'r', linewidth = 2)
+#ax3.set_xlabel("Sentence Length (Words)")
+#
+#ax4 = fig.add_subplot(gs[1,2])
+#sns.distplot(articles_python["ratio_codecomment"].dropna(),
+#             kde=False, bins=bins_ratiocodecomment,color="r")
+#plt.axvline(x = article_draft["ratio_codecomment"].values, 
+#            ymin = 0, ymax = 1, color = 'r', linewidth = 2)
+#ax4.set_xlabel("Code/Comment Ratio")
+#
+#ax5 = fig.add_subplot(gs[1,3])
+#sns.distplot(articles_python["a_code_length"].dropna(),
+#             kde=False, bins = bins_a_comment_length,color="r")
+#plt.axvline(x = article_draft["a_code_length"].values, 
+#            ymin = 0, ymax = 1, color = 'r', linewidth = 2)
+#ax5.set_xlabel("Av. Code Line Length")
+#
+#ax6 = fig.add_subplot(gs[1,4])
+#sns.distplot(articles_python["a_comment_length"].dropna(),
+#             kde=False, bins = bins_a_comment_length,color="r")
+#plt.axvline(x = article_draft["a_comment_length"].values, 
+#            ymin = 0, ymax = 1, color = 'r', linewidth = 2)
+#ax6.set_xlabel("Av. Comment Length")
+#
+#ax7 = fig.add_subplot(gs[2,2])
+#sns.distplot(articles_timelist, kde=False, bins=24, color="g")
+#plt.axvline(x = article_draft_time, 
+#            ymin = 0, ymax = 1, color = 'r', linewidth = 2)
+#ax7.set_xlabel("Time of Day")
+#
+#
+#plt.subplots_adjust(wspace=0.35,hspace=0.4,top=0.9)
     
 # Pickle pandas frame
-articles_all.to_pickle('../draftingboard/draftingboard/articles_all')
+articles_all.to_pickle('../draftingboard/articles_python.pickle')

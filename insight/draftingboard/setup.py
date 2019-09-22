@@ -22,14 +22,17 @@ def tag_output():
                                   my_input = user_input,
                                   my_form_result="Empty")
        else:
-           process_text.master_function(user_input)
-           recommended_articles = recommender.master_function(user_input)
+           analysed_text = process_text.master_function(user_input)
+           similar_articles = analysed_text[0]
+           suggestions = analysed_text[1]
            return render_template("index_v2.html",
                               my_input=user_input,
                               my_output=user_input,
-                              article1=str(recommended_articles.iloc[0]),
-							  article2=str(recommended_articles.iloc[1]),
-							  article3=str(recommended_articles.iloc[2]),
+                              article1_title=str(similar_articles.iloc[0]),
+							  article2_title=str(similar_articles.iloc[1]),
+							  article3_title=str(similar_articles.iloc[2]),
+                              sugg1=str(suggestions[0]),
+                              sugg2=str("Still in progress."),
                               results_plot='/static/img/output.png',
                               my_form_result="NotEmpty")
 

@@ -43,10 +43,6 @@
 
       {% elif my_form_result=='NotEmpty' %}     
 
-      <div class="row mt-4 justify-content-center">
-            <h4 class="text-light text-center text-uppercase">Your Post:</h4>
-      </div>
-
 	  <div class="row">
             <!-- Column 1 -->
             <div class="col-xl-5 col-md-6 mb-4">
@@ -58,7 +54,7 @@
                       <div class="h5 mb-0 text-gray-800">
 					  
 					  <!-- Output returned here: copy of input text -->
-					  <div class="text-xs h6 mb-0 text-gray-800 overflow-auto" style="height: 75px overflow: scroll">
+					  <div class="text-xs h6 mb-0 text-secondary overflow-y:scroll" style="height: 475px">
 					  {{my_input}}
 					  </div>
 					  
@@ -106,9 +102,9 @@
                         <div class="col">
 						 
                           <div class="h6 mb-0 mr-3 text-gray-800" align="left" style=100%>
-						  <p><b>Article 1:</b> {{article1}}</p>
-						  <p><b>Article 2:</b> {{article2}}</p>
-						  <p><b>Article 3:</b> {{article3}}</p>
+						  <p><b>Article 1:</b> {{article1_title}}</p>
+						  <p><b>Article 2:</b> {{article2_title}}</p>
+						  <p><b>Article 3:</b> {{article3_title}}</p>
 						  </div>
                        
                       </div>
@@ -124,11 +120,12 @@
                 <div class="card-body" style="vertical-align:text-top overflow-y:scroll">
                   <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
-                      <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Sugestions</div>
+                      <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Suggestions</div>
 					  
-					<div class="text-xs h6 mb-0 text-gray-800 overflow-auto" style="height: 75px overflow: scroll">
-					Still to come...
-					</div>
+					<div class="h6 mb-0 mr-3 text-gray-800" align="left" style=100%>
+						  <p><b>1:</b> {{sugg1}}</p>
+						  <p><b>2:</b> {{sugg2}}</p>
+				  </div>
 					  
 					</div>						
                     </div>

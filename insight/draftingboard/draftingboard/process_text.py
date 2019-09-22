@@ -1,13 +1,17 @@
-# Basics
+# Data import and handling
 from bs4 import BeautifulSoup
 import numpy as np
 import pandas as pd
 from datetime import datetime
-import pickle
-
-## NLP & Machine Learning
-import nltk
 import string
+
+# NLP & Machine Learning
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import linear_kernel
+import nltk
+
+# Statistics
+from scipy import stats
 
 # Plotting
 import matplotlib.pyplot as plt
@@ -16,18 +20,94 @@ import seaborn as sns
 sns.set(style="ticks", color_codes=True, font_scale=0.95)
 	
 def master_function(user_input):
-	article_raw = user_input
-	
-	article_draft = SingleArticleParser(article_raw).article_processed
-	article_draft["firstPublishedDatetime"] = pd.to_datetime(article_draft["firstPublishedDatetime"])
-	
-	articles_python = pd.read_pickle('articles_python_popular.pickle')
+    """
+    Purpose: Take input text, feed it into subfunctions to process it further, 
+    return some things to the Flask script for updating the webpages with.
     	
-	generate_figure(article_draft, articles_python)
+    Functions called upon:
+        - generate_figure: Take input text, generate a plot of the NLP metrics (red 
+        line) on a histogram of historically successful articles
+        - recommend: Take input text, look for similar articles in the database and 
+        return their titles.
+        - suggestion1: Generate a suggestion for what to change about the article 
+        based on the NLP metrics.
+    	
+    Classes called upon:
+        - SingleArticleParser: Take input text and code, calculate some NLP metrics 
+        for average words, ratio of code/comment, etc. This is called early on as 
+        the NLP metrics are used in many of the functions described earlier.
+    	
+    Inputs:
+        - user_input = Raw, unformatted text entered by the user.
+    	
+	Outputs:
+        - (no output) Analytics/histogram figure saved to the file path 
+        '../static/img/output.png'
+        - similar_articles = 3-item list of article titles with the highest similarity 
+        to the input text
+        - suggestions = String variables containing suggestions for what to fix 
+        about the article.
+    """
+    # Get user input
+    article_raw = user_input
+
+    # Read in 2 DFs of previous articles which have already had the same NLP 
+    # metrics calculated. articles_popular is used for the histograms 
+    # (where you sit relative to popular articles), articles_all is used for 
+    # the recommender system (has this already been published before, whether 
+    # or not it was popular)
+    articles_all = pd.read_pickle('articles_python.pickle')
+    articles_popular = pd.read_pickle('articles_python_popular.pickle')
+    
+    # Feed user input to single article parser (returns a DF that contains NLP 
+    # metrics for the article)
+    article_draft = SingleArticleParser(article_raw).article_processed
+    article_draft["firstPublishedDatetime"] = pd.to_datetime(article_draft["firstPublishedDatetime"])
+    article_draft_index = len(articles_all) - 1
+ 
+    articles_all = articles_all.append(article_draft)
+    articles_all.loc["draft_article","postId"] = "draft_article"
+    print("articles_all after index reassignment")
+    print(articles_all.tail())
+    
+    # Generate a figure that overlays the NLP metric values on a histogram of the historically popular ones
+    generate_figure(article_draft, articles_popular)
+    	
+    # Process text column to construct tfidf_matrix as input for cosine similarity
+    topic_frequency = TfidfVectorizer(analyzer = 'word',
+									 min_df = 1,
+									 stop_words = 'english')
+    tfidf_matrix = topic_frequency.fit_transform(articles_all["text"])
+    
+    cosine_similarity = linear_kernel(tfidf_matrix, tfidf_matrix) 
+    articles_all = articles_all.reset_index(drop=True)
+    print(articles_all.tail())
+    indices = pd.Series(articles_all["text"].index)
 	
-def generate_figure(article_draft, articles_python):
+    similar_articles = recommend(article_draft_index, indices, cosine_similarity, articles_all)
+
+    # Feed processed draft into the suggestion system
+    suggestion1_string = suggestion1(articles_all)
+#    suggestion2_string = suggestion2(similar_articles)
+    suggestions = [suggestion1_string]
+    
+    outputs = [similar_articles, suggestions]
+    # Return values back to Flask script for display in the output webpage
+    return outputs
+	
+def generate_figure(article_draft, articles_popular):
+	"""
+	Purpose: Generate a figure which overlays the NLP metrics of the draft article on the histogram of historically successful articles (measured by those in the top percentage of clap count
+	
+	Inputs:
+		- article_draft = 1 row DF containing the characteristics of the draft article (pre-crunched NLP metrics handled by the class SingleArticleParser0
+		- articles_popular = DF containing the database of historically successful articles
+		
+	Outputs:
+		- None. (Function does not return anything.) However, it will run a plt.savefig() command with the plotted histograms that the Flask script setup.py will call at one point.
+	"""
 	article_draft = article_draft
-	articles_python = articles_python
+	articles_python = articles_popular
 	
 	# Convert datetimeobjects to hour of post for later plotting
 	articles_timelist = []
@@ -35,7 +115,6 @@ def generate_figure(article_draft, articles_python):
 		articles_timelist.append(
 				articles_python["firstPublishedDatetime"].iloc[i].time().hour)
 	article_draft_time = article_draft["firstPublishedDatetime"].iloc[0].time().hour
-
 	
 	bins_words = np.arange(0,5001,250)
 	bins_sentencelengths = np.arange(0,41,2.5)
@@ -96,6 +175,104 @@ def generate_figure(article_draft, articles_python):
 
 	plt.subplots_adjust(wspace=0.35,hspace=0.4,top=0.9)
 	plt.savefig('static/img/output',bbox_inches='tight')
+
+def recommend(index,indices,method,articles_all):	
+    """
+    Purpose: Return the titles for articles which are the most similar by text 
+    content to the draft.
+    	
+    Inputs:
+        - index = Index of the draft article in the DF articles_all
+        - indices = List of all indices in the DF aticles_all
+        - method = Approach by which similarity should be calculated
+        - articles_all = DF containing the database of articles similarity should 
+        be calculated against.
+    		
+    Outputs:
+        - similar_articles = 3-item list containing titles of articles determined 
+        to be most similar
+    """
+    # Calculate similarity score across all articles in database
+    id = indices[index]
+    similarity_scores = list(enumerate(method[id]))
+    similarity_scores = sorted(similarity_scores, key=lambda x: x[1], reverse=True)
+    similarity_scores = similarity_scores[1:4]
+    print("Similarity scores: ")
+    print(similarity_scores)
+    
+    articles_index = [i[0] for i in similarity_scores]
+    print("articles_index: ")
+    print(articles_index)
+    
+    #Return the top 5 most similar books using integar-location based indexing (iloc)
+    return articles_all['title'].iloc[articles_index]	
+	    
+def suggestion1(articles_all):
+    zscores = pd.DataFrame({'total_codelines' : stats.zscore(articles_all["total_codelines"].iloc[:]),
+                            'total_commentlines' : stats.zscore(articles_all["total_commentlines"].iloc[:]),
+                            'ratio_codecomment' : stats.zscore(articles_all["ratio_codecomment"].iloc[:]),
+                            'a_code_length' : stats.zscore(articles_all["a_code_length"].iloc[:]),
+                            'a_comment_length' : stats.zscore(articles_all["a_comment_length"].iloc[:]),
+                            'n_sentences' : stats.zscore(articles_all["n_sentences"].iloc[:]),
+                            'a_sentence_length' : stats.zscore(articles_all["a_sentence_length"].iloc[:]),
+                            'n_words' : stats.zscore(articles_all["n_words"].iloc[:]),
+                            'u_words' : stats.zscore(articles_all["u_words"].iloc[:]),
+                            'a_word_length' : stats.zscore(articles_all["a_word_length"].iloc[:])
+                            },
+                            index=articles_all["postId"])
+    print(zscores.head())
+    print(zscores.tail())
+    zscores_abs = zscores.apply(np.absolute, axis=1)
+    zscores_draft = [np.argmax(zscores_abs.loc["draft_article"][:]),
+                     np.max(zscores_abs.loc["draft_article"][:])]
+    print(zscores_draft)
+    
+    dict_characteristics = {'total_codelines' : 'total of code lines',
+                            'total_commentlines' : 'total of comment lines',
+                            'ratio_codecomment' : 'ratio of code/comment lines',
+                            'a_code_length' : 'average length of code line',
+                            'a_comment_length' : 'avergae length of commentline',
+                            'n_sentences' : 'total number of sentences',
+                            'a_sentence_length' : 'average words/sentence',
+                            'n_words' : 'word count',
+                            'u_words' : 'vocabulary size',
+                            'a_word_length' : 'average sentence length'}
+    char_draft = dict_characteristics.get(zscores_draft[0])
+    value_draft = articles_all[zscores_draft[0]].iloc[len(articles_all)-1]
+    sign_draft = str(np.sign(zscores.loc["draft_article",str(zscores_draft[0])]))
+    mean_all = np.mean(articles_all[zscores_draft[0]])
+    
+    dict_sign_descript = {'-1.0' : 'lower',
+                          '1.0' : 'higher'}
+    sign_sugg_descript = dict_sign_descript.get(sign_draft)
+    
+    dict_sign = {'-1.0' : "increasing",
+                 '1l0' : "decreasing"}
+    sign_sugg = dict_sign.get(sign_draft)
+    
+    suggestion1 = "Your " + char_draft + " of " + "{:.2f}".format(value_draft) + \
+    " is " + sign_sugg_descript + " than the average of " "{:.2f}".format(mean_all) + \
+    ", consider " + sign_sugg + " this for increased clarity."
+    
+    return suggestion1
+
+#def suggestion2(similar_articles):   
+#    sim_mean = similar_articles[3]
+#    sim_stdev = similar_articles[4]
+#    sim_highest = similar_articles[2]
+#    
+#    zscore = (sim_highest - sim_mean)/sim_stdev
+#    
+#    if zscore < 1:
+#        output="This content appears unique! Great work."
+#    else:
+#        output="Take a second look at the articles deemed to be similar to make \
+#              sure yours is unique."
+#    
+#    suggestion2 = "The similarity score between your draft and the next closest article is {a}, \
+#    compared to an average of {b} (z-score: {c}. {d})".format(a=sim_highest,b=sim_mean,c=zscore,d=output)
+#    
+#    return suggestion2
 
 	
 class SingleArticleParser:

@@ -60,6 +60,7 @@ class ScrapeArticle:
         datePublished = 'nan'
         postId = 'nan'
         publicationname = 'nan'
+        url = 'nan'
 
         try:
             metadata = soup.find_all("script", 
@@ -114,7 +115,8 @@ articles_scraped = pd.DataFrame(columns = ['title',
                                            'figureCount',
                                            'publicationname',
                                            'postId',
-                                           'firstPublishedDatetime'])
+                                           'firstPublishedDatetime',
+                                           'url'])
 articleno = 0
 for article in article_list:
     articleno = articleno + 1
