@@ -4,9 +4,11 @@ import numpy as np
 import pandas as pd
 from datetime import datetime
 import string
+from joblib import dump, load
 
 # NLP & Machine Learning
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import linear_kernel
 import nltk
 
@@ -84,7 +86,13 @@ def master_function(user_input):
     print(articles_all.tail())
     indices = pd.Series(articles_all["text"].index)
 	
+    # Recommend similar articles
     similar_articles = recommend(article_draft_index, indices, cosine_similarity, articles_all)
+
+    # Assign topic
+    predicted_topic = assign_topic(article_draft["text"])
+    print(" ")
+    print("Predicted topic: {}".format(predicted_topic))
 
     # Feed processed draft into the suggestion system
     suggestion1_string = suggestion1(articles_all)
@@ -215,7 +223,42 @@ def recommend(index,indices,method,articles_all):
     
     #Return the top 5 most similar books using integar-location based indexing (iloc)
     return [articles_all['title'].iloc[articles_index], similarity_scores_top, similarity_scores_stats]
-	    
+	   
+def assign_topic(article_text):         
+#    LDA_model_alpha = load('LDA_pickled_model_alpha.joblib')
+#    print("Pickled model imported.")
+#    
+#    # Fit document to model
+#    word_frequency = CountVectorizer(stop_words = 'english')
+#    vocabulary = word_frequency.fit_transform(article_text.values.astype('U'))
+#    attempt1 = LDA_model_alpha.LDA_model.fit(vocabulary)
+#    print("attempt1")
+#    
+#    model_alpha_dict = {0 : 'natural language processing',
+#                        1 : 'general data science',
+#                        2 : 'neural networks',
+#                        3 : 'machine learning',
+#                        4 : 'time series modelling',
+#                        5 : 'natural language processing',
+#                        6 : 'supervised learning',
+#                        7 : 'supervised learning',
+#                        8 : 'neural networks',
+#                        9 : 'machine learning',
+#                        10 : 'unassigned'}
+#    
+#    topic_prob_alpha = LDA_model_alpha.LDA_model.transform(vocabulary)
+#    if np.amax(topic_prob_alpha > 0.6):
+#        topic_assignment = np.argmax(topic_prob_alpha)
+#    else:
+#        topic_assignment = 10
+#    topic_assignment = model_alpha_dict[topic_assignment]
+#    print("Topic assignment: {}".format(topic_assignment))
+    
+    topic_assignment = "Test output topic_assignment for debugging only."
+    
+    return topic_assignment
+#    return "Hello from assign_topic."
+ 
 def suggestion1(articles_all):
     zscores = pd.DataFrame({'total_codelines' : stats.zscore(articles_all["total_codelines"].iloc[:]),
                             'total_commentlines' : stats.zscore(articles_all["total_commentlines"].iloc[:]),
@@ -229,12 +272,9 @@ def suggestion1(articles_all):
                             'a_word_length' : stats.zscore(articles_all["a_word_length"].iloc[:])
                             },
                             index=articles_all["postId"])
-    print(zscores.head())
-    print(zscores.tail())
     zscores_abs = zscores.apply(np.absolute, axis=1)
     zscores_draft = [np.argmax(zscores_abs.loc["draft_article"][:]),
                      np.max(zscores_abs.loc["draft_article"][:])]
-    print(zscores_draft)
     
     dict_characteristics = {'total_codelines' : 'total of code lines',
                             'total_commentlines' : 'total of comment lines',
@@ -256,7 +296,7 @@ def suggestion1(articles_all):
     sign_sugg_descript = dict_sign_descript.get(sign_draft)
     
     dict_sign = {'-1.0' : "increasing",
-                 '1l0' : "decreasing"}
+                 '1.0' : "decreasing"}
     sign_sugg = dict_sign.get(sign_draft)
     
     suggestion1 = "Your " + char_draft + " of " + "{:.2f}".format(value_draft) + \
@@ -273,11 +313,9 @@ def suggestion2(similar_articles):
     print(" ")
     print("sim_top: {}, sim_mean: {}, sim_std: {}.".format(sim_top, sim_mean, sim_std))
     print(" ")
-    
-#    zscore = (sim_top - sim_mean)/sim_std
-    
-    if sim_top < 5*sim_mean:
-        output="This content appears unique! Great work."
+        
+    if sim_top < 5*sim_mean: # threshold for determining uniqueness.
+        output="This content appears unique in the reference database! Great work."
     else:
         output="Take a second look at the articles deemed to be similar to make \
               sure yours is unique."
