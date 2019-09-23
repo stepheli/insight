@@ -88,8 +88,8 @@ def master_function(user_input):
 
     # Feed processed draft into the suggestion system
     suggestion1_string = suggestion1(articles_all)
-#    suggestion2_string = suggestion2(similar_articles)
-    suggestions = [suggestion1_string]
+    suggestion2_string = suggestion2(similar_articles)
+    suggestions = [suggestion1_string, suggestion2_string]
     
     outputs = [similar_articles, suggestions]
     # Return values back to Flask script for display in the output webpage
@@ -196,16 +196,25 @@ def recommend(index,indices,method,articles_all):
     id = indices[index]
     similarity_scores = list(enumerate(method[id]))
     similarity_scores = sorted(similarity_scores, key=lambda x: x[1], reverse=True)
-    similarity_scores = similarity_scores[1:4]
-    print("Similarity scores: ")
-    print(similarity_scores)
     
+    # Store list of simscore values for later use in suggestion generation
+    similarity_scores_values = []
+    for i in range(0,len(similarity_scores)):
+        similarity_scores_values.append(similarity_scores[i][1])  
+    similarity_scores_mean = np.mean(similarity_scores_values)
+    similarity_scores_std = np.std(similarity_scores_values)
+  
+    similarity_scores_stats = [similarity_scores_mean, similarity_scores_std]
+        
+    similarity_scores_top = similarity_scores[1:4]    
+    similarity_scores_topvalues = []
+    for i in range(0,len(similarity_scores_top)):
+        similarity_scores_topvalues.append(similarity_scores_top[i][1])
+        
     articles_index = [i[0] for i in similarity_scores]
-    print("articles_index: ")
-    print(articles_index)
     
     #Return the top 5 most similar books using integar-location based indexing (iloc)
-    return articles_all['title'].iloc[articles_index]	
+    return [articles_all['title'].iloc[articles_index], similarity_scores_top, similarity_scores_stats]
 	    
 def suggestion1(articles_all):
     zscores = pd.DataFrame({'total_codelines' : stats.zscore(articles_all["total_codelines"].iloc[:]),
@@ -256,23 +265,29 @@ def suggestion1(articles_all):
     
     return suggestion1
 
-#def suggestion2(similar_articles):   
-#    sim_mean = similar_articles[3]
-#    sim_stdev = similar_articles[4]
-#    sim_highest = similar_articles[2]
-#    
-#    zscore = (sim_highest - sim_mean)/sim_stdev
-#    
-#    if zscore < 1:
-#        output="This content appears unique! Great work."
-#    else:
-#        output="Take a second look at the articles deemed to be similar to make \
-#              sure yours is unique."
-#    
-#    suggestion2 = "The similarity score between your draft and the next closest article is {a}, \
-#    compared to an average of {b} (z-score: {c}. {d})".format(a=sim_highest,b=sim_mean,c=zscore,d=output)
-#    
-#    return suggestion2
+def suggestion2(similar_articles): 
+    sim_top = similar_articles[1][0][1]
+    sim_mean = similar_articles[2][0]
+    sim_std = similar_articles[2][1]
+    
+    print(" ")
+    print("sim_top: {}, sim_mean: {}, sim_std: {}.".format(sim_top, sim_mean, sim_std))
+    print(" ")
+    
+#    zscore = (sim_top - sim_mean)/sim_std
+    
+    if sim_top < 5*sim_mean:
+        output="This content appears unique! Great work."
+    else:
+        output="Take a second look at the articles deemed to be similar to make \
+              sure yours is unique."
+    
+    suggestion2 = "The similarity score between your draft and the next closest article is {a:.2f}, \
+    compared to an average of {b:.2f}. {d})".format(a=sim_top,b=sim_mean,d=output)
+    
+#    suggestion2 = "42: the answer to the question of life, the universe, and everything."
+    
+    return suggestion2
 
 	
 class SingleArticleParser:

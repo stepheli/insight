@@ -23,7 +23,7 @@ def tag_output():
                                   my_form_result="Empty")
        else:
            analysed_text = process_text.master_function(user_input)
-           similar_articles = analysed_text[0]
+           similar_articles = analysed_text[0][0]
            suggestions = analysed_text[1]
            return render_template("index_v2.html",
                               my_input=user_input,
@@ -32,7 +32,7 @@ def tag_output():
 							  article2_title=str(similar_articles.iloc[1]),
 							  article3_title=str(similar_articles.iloc[2]),
                               sugg1=str(suggestions[0]),
-                              sugg2=str("Still in progress."),
+                              sugg2=str(suggestions[1]),
                               results_plot='/static/img/output.png',
                               my_form_result="NotEmpty")
 
