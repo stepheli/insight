@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request
 from draftingboard import process_text
-from draftingboard import recommender
+from draftingboard.TopicModellingSklearn import TopicModellingSklearn
+#from draftingboard import recommender
 
 # Create the application object
 app = Flask(__name__)
@@ -33,6 +34,7 @@ def tag_output():
 							  article3_title=str(similar_articles.iloc[2]),
                               sugg1=str(suggestions[0]),
                               sugg2=str(suggestions[1]),
+                              sugg3=str(suggestions[2]),
                               results_plot='/static/img/output.png',
                               my_form_result="NotEmpty")
 
@@ -40,4 +42,3 @@ def tag_output():
 # start the server with the 'run()' method
 if __name__ == "__main__":
     app.run(debug=True) #will run locally http://127.0.0.1:5000/
-

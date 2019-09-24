@@ -5,11 +5,13 @@ import pandas as pd
 from datetime import datetime
 import string
 from joblib import dump, load
+import pickle
 
 # NLP & Machine Learning
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import linear_kernel
+from sklearn.decomposition import LatentDirichletAllocation
 import nltk
 
 # Statistics
@@ -59,12 +61,7 @@ def master_function(user_input):
     # the recommender system (has this already been published before, whether 
     # or not it was popular)
     articles_all = pd.read_pickle('articles_python.pickle')
-    print(" ")
-    print("Available columns in pickled articles:")
-    for item in articles_all.columns:
-        print(item)
     articles_popular = pd.read_pickle('articles_python_popular.pickle')
-    print(" ")
     
     # Feed user input to single article parser (returns a DF that contains NLP 
     # metrics for the article)
@@ -74,6 +71,9 @@ def master_function(user_input):
     articles_all = articles_all.append(article_draft)
     article_draft_index = len(articles_all) - 1
     articles_all.loc["draft_article","postId"] = "draft_article"
+    
+    # Assign topic
+    article_topic = assign_topic(articles_all)
     
     # Generate a figure that overlays the NLP metric values on a histogram of the historically popular ones
     generate_figure(article_draft, articles_popular)
@@ -88,8 +88,6 @@ def master_function(user_input):
     articles_all = articles_all.reset_index(drop=True)
 
     indices = pd.Series(articles_all["text"].index)
-    print("Indices: ")
-    print(indices)
 	
     # Recommend similar articles
     similar_articles = recommend(article_draft_index, indices, cosine_similarity, articles_all)
@@ -97,7 +95,8 @@ def master_function(user_input):
     # Feed processed draft into the suggestion system
     suggestion1_string = suggestion1(articles_all)
     suggestion2_string = suggestion2(similar_articles)
-    suggestions = [suggestion1_string, suggestion2_string]
+    suggestion3_string = suggestion3(article_topic)
+    suggestions = [suggestion1_string, suggestion2_string, suggestion3_string]
     
     outputs = [similar_articles, suggestions]
     # Return values back to Flask script for display in the output webpage
@@ -221,12 +220,39 @@ def recommend(index,indices,method,articles_all):
     for i in range(0,len(similarity_scores_top)):
         similarity_scores_topvalues.append(similarity_scores_top[i][1])
         
-    
-    print(articles_all.head())
-    
+        
     #Return the top 5 most similar books using integar-location based indexing (iloc)
     return [articles_all['title'].iloc[articles_index], similarity_scores_top, similarity_scores_stats]
-	    
+
+def assign_topic(articles_all):
+    # Load previously pickled model, set up dictionary for mapping index to topic name
+    LDA_model = pickle.load(open('pickled_LDA_model.sav','rb'))
+    article_draft = articles_all.loc[["draft_article"]]
+    
+    model_dict = {0 : 'general machine learning',
+                 1 : 'general data science',
+                 2 : 'natural language processing',
+                 3 : 'natural language processing',
+                 4 : 'general data science',
+                 5 : 'neural networks',
+                 6 : 'regressors, classifiers, and clustering'}
+    
+    # Pass text of draft article to count vectorizer to prep for fitting
+    try:
+        word_frequency = CountVectorizer(stop_words='english')
+        vocabulary = word_frequency.fit_transform(article_draft["text"])
+        
+        assigned_topic_index = LDA_model.LDA_model.fit_transform(vocabulary)
+        
+        # Assign topic with the highest probability, map index to name and return to master_function 
+        assigned_topic_index = np.argmax(assigned_topic_index)       
+        assigned_topic = model_dict[assigned_topic_index]
+        
+    except:
+        assigned_topic = "unknown"
+    
+    return assigned_topic
+    
 def suggestion1(articles_all):
     zscores = pd.DataFrame({'total_codelines' : stats.zscore(articles_all["total_codelines"].iloc[:]),
                             'total_commentlines' : stats.zscore(articles_all["total_commentlines"].iloc[:]),
@@ -274,6 +300,15 @@ def suggestion1(articles_all):
     return suggestion1
 
 def suggestion2(similar_articles): 
+    """
+    Purpose: Generate a suggestion based on article similarity.
+    
+    Inputs:
+        - similar_articles 
+        
+    Outputs:
+        - string with suggestion to be displayed
+    """
     sim_top = similar_articles[1][0][1]
     sim_mean = similar_articles[2][0]
     sim_std = similar_articles[2][1]
@@ -290,6 +325,46 @@ def suggestion2(similar_articles):
 #    suggestion2 = "42: the answer to the question of life, the universe, and everything."
     
     return suggestion2
+
+def suggestion3(article_topic):
+    """
+    Purpose: Generate a suggestion for tags to add based on the detected topic.
+    """
+    
+    
+    if article_topic == 'general machine learning':
+        keywords = 'machine learning, \
+            artificial intelligence, \
+            scoring, \
+            and confusion matrix.'
+    elif article_topic == 'general data science':
+        keywords = 'data science, \
+            programming, \
+            data visualization \
+            and accuracy.'
+    elif article_topic == 'natural language processing':
+        keywords = 'machine learning \
+            NLP, \
+            web scraping, \
+            gensim, \
+            and pipeline.'
+    elif article_topic == 'neural networks':
+        keywords = 'machine learning, \
+            artificial intelligence, \
+            neural networks,\
+            and deep learning.'
+    elif article_topic == 'regressors, classifiers, and clustering':
+        keywords = 'machine learning, \
+        scoring, \
+        and confusion matrix.'
+    else:
+        keywords = 'Err.'
+    
+    suggestion3 = "Your article appears to be about the topic of {a}. \
+        Tags that may be relevant include: {b}".format(a=article_topic,b=keywords)
+    
+    
+    return suggestion3
 
 	
 class SingleArticleParser:
