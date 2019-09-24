@@ -59,18 +59,21 @@ def master_function(user_input):
     # the recommender system (has this already been published before, whether 
     # or not it was popular)
     articles_all = pd.read_pickle('articles_python.pickle')
+    print(" ")
+    print("Available columns in pickled articles:")
+    for item in articles_all.columns:
+        print(item)
     articles_popular = pd.read_pickle('articles_python_popular.pickle')
+    print(" ")
     
     # Feed user input to single article parser (returns a DF that contains NLP 
     # metrics for the article)
     article_draft = SingleArticleParser(article_raw).article_processed
     article_draft["firstPublishedDatetime"] = pd.to_datetime(article_draft["firstPublishedDatetime"])
-    article_draft_index = len(articles_all) - 1
  
     articles_all = articles_all.append(article_draft)
+    article_draft_index = len(articles_all) - 1
     articles_all.loc["draft_article","postId"] = "draft_article"
-    print("articles_all after index reassignment")
-    print(articles_all.tail())
     
     # Generate a figure that overlays the NLP metric values on a histogram of the historically popular ones
     generate_figure(article_draft, articles_popular)
@@ -83,16 +86,13 @@ def master_function(user_input):
     
     cosine_similarity = linear_kernel(tfidf_matrix, tfidf_matrix) 
     articles_all = articles_all.reset_index(drop=True)
-    print(articles_all.tail())
+
     indices = pd.Series(articles_all["text"].index)
+    print("Indices: ")
+    print(indices)
 	
     # Recommend similar articles
     similar_articles = recommend(article_draft_index, indices, cosine_similarity, articles_all)
-
-    # Assign topic
-    predicted_topic = assign_topic(article_draft["text"])
-    print(" ")
-    print("Predicted topic: {}".format(predicted_topic))
 
     # Feed processed draft into the suggestion system
     suggestion1_string = suggestion1(articles_all)
@@ -204,7 +204,8 @@ def recommend(index,indices,method,articles_all):
     id = indices[index]
     similarity_scores = list(enumerate(method[id]))
     similarity_scores = sorted(similarity_scores, key=lambda x: x[1], reverse=True)
-    
+        
+
     # Store list of simscore values for later use in suggestion generation
     similarity_scores_values = []
     for i in range(0,len(similarity_scores)):
@@ -214,51 +215,18 @@ def recommend(index,indices,method,articles_all):
   
     similarity_scores_stats = [similarity_scores_mean, similarity_scores_std]
         
-    similarity_scores_top = similarity_scores[1:4]    
+    similarity_scores_top = similarity_scores[1:4]  
+    articles_index = [i[0] for i in similarity_scores_top]
     similarity_scores_topvalues = []
     for i in range(0,len(similarity_scores_top)):
         similarity_scores_topvalues.append(similarity_scores_top[i][1])
         
-    articles_index = [i[0] for i in similarity_scores]
+    
+    print(articles_all.head())
     
     #Return the top 5 most similar books using integar-location based indexing (iloc)
     return [articles_all['title'].iloc[articles_index], similarity_scores_top, similarity_scores_stats]
-	   
-def assign_topic(article_text):         
-#    LDA_model_alpha = load('LDA_pickled_model_alpha.joblib')
-#    print("Pickled model imported.")
-#    
-#    # Fit document to model
-#    word_frequency = CountVectorizer(stop_words = 'english')
-#    vocabulary = word_frequency.fit_transform(article_text.values.astype('U'))
-#    attempt1 = LDA_model_alpha.LDA_model.fit(vocabulary)
-#    print("attempt1")
-#    
-#    model_alpha_dict = {0 : 'natural language processing',
-#                        1 : 'general data science',
-#                        2 : 'neural networks',
-#                        3 : 'machine learning',
-#                        4 : 'time series modelling',
-#                        5 : 'natural language processing',
-#                        6 : 'supervised learning',
-#                        7 : 'supervised learning',
-#                        8 : 'neural networks',
-#                        9 : 'machine learning',
-#                        10 : 'unassigned'}
-#    
-#    topic_prob_alpha = LDA_model_alpha.LDA_model.transform(vocabulary)
-#    if np.amax(topic_prob_alpha > 0.6):
-#        topic_assignment = np.argmax(topic_prob_alpha)
-#    else:
-#        topic_assignment = 10
-#    topic_assignment = model_alpha_dict[topic_assignment]
-#    print("Topic assignment: {}".format(topic_assignment))
-    
-    topic_assignment = "Test output topic_assignment for debugging only."
-    
-    return topic_assignment
-#    return "Hello from assign_topic."
- 
+	    
 def suggestion1(articles_all):
     zscores = pd.DataFrame({'total_codelines' : stats.zscore(articles_all["total_codelines"].iloc[:]),
                             'total_commentlines' : stats.zscore(articles_all["total_commentlines"].iloc[:]),
@@ -309,10 +277,6 @@ def suggestion2(similar_articles):
     sim_top = similar_articles[1][0][1]
     sim_mean = similar_articles[2][0]
     sim_std = similar_articles[2][1]
-    
-    print(" ")
-    print("sim_top: {}, sim_mean: {}, sim_std: {}.".format(sim_top, sim_mean, sim_std))
-    print(" ")
         
     if sim_top < 5*sim_mean: # threshold for determining uniqueness.
         output="This content appears unique in the reference database! Great work."
@@ -349,7 +313,6 @@ class SingleArticleParser:
         # Pass imported file to article which splits it into text/code and 
         # assigns basic features (current datetime etc.)        
         self.article_processed = self.article_parser()
-        print(self.article_processed)
         
         # Set up variables for functions to process text
         self.postId = self.article_processed["postId"]

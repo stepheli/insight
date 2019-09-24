@@ -309,32 +309,32 @@ articles_all = articles_all.drop_duplicates(subset="title",keep="first")
 
 articles_all = articles_all.append(article_draft)
 
-## Process text column to construct tfidf_matrix as input for cosine similarity
-#topic_frequency = TfidfVectorizer(analyzer = 'word',
-#                                 min_df = 1,
-#                                 stop_words = 'english')
-#tfidf_matrix = topic_frequency.fit_transform(articles_all["text"])
-#
-#cosine_similarity = linear_kernel(tfidf_matrix, tfidf_matrix) 
-#
-#articles_all = articles_all.reset_index(drop=True)
-#indices = pd.Series(articles_all["text"].index)
-#
-#article_test = len(articles_all) - 1
-#print("Original article: {}".format(articles_all["title"].iloc[article_test]))
-#print(" ")
-#print(recommend(article_test, cosine_similarity))
-#
-#output_test = recommend(article_test,cosine_similarity)
-#similarity_scores = recommend2(article_test,cosine_similarity)
-#similarity_scores_values = []
-#for i in range(0,len(similarity_scores)):
-#    if similarity_scores[i][1] < 0.999:
-#        similarity_scores_values.append(similarity_scores[i][1])
-#test = np.mean(similarity_scores_values)
-#
-#
-#
+# Process text column to construct tfidf_matrix as input for cosine similarity
+topic_frequency = TfidfVectorizer(analyzer = 'word',
+                                 min_df = 1,
+                                 stop_words = 'english')
+tfidf_matrix = topic_frequency.fit_transform(articles_all["text"])
+
+cosine_similarity = linear_kernel(tfidf_matrix, tfidf_matrix) 
+
+articles_all = articles_all.reset_index(drop=True)
+indices = pd.Series(articles_all["text"].index)
+
+article_test = len(articles_all) - 1
+print("Original article: {}".format(articles_all["title"].iloc[article_test]))
+print(" ")
+print(recommend(article_test, cosine_similarity))
+
+output_test = recommend(article_test,cosine_similarity)
+similarity_scores = recommend2(article_test,cosine_similarity)
+similarity_scores_values = []
+for i in range(0,len(similarity_scores)):
+    if similarity_scores[i][1] < 0.999:
+        similarity_scores_values.append(similarity_scores[i][1])
+test = np.mean(similarity_scores_values)
+
+
+
 ## Set up bins of predefined size for later histograms
 #bins_words = np.arange(0,5001,250)
 #bins_sentencelengths = np.arange(0,41,2.5)
@@ -396,5 +396,5 @@ articles_all = articles_all.append(article_draft)
 #
 #plt.subplots_adjust(wspace=0.35,hspace=0.4,top=0.9)
     
-# Pickle pandas frame
-articles_all.to_pickle('../draftingboard/articles_python.pickle')
+## Pickle pandas frame
+#articles_all.to_pickle('../draftingboard/articles_python.pickle')
