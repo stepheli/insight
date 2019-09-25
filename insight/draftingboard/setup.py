@@ -22,7 +22,7 @@ def tag_output():
            return render_template("index.html",
                                   my_input = user_input,
                                   my_form_result="Empty")
-       else:
+       else:           
            analysed_text = process_text.master_function(user_input)
            similar_articles = analysed_text[0][0]
            suggestions = analysed_text[1]

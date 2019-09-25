@@ -1,5 +1,5 @@
 class TopicModellingSklearn:
-    def __init__(self,text,min_df,max_df,n_components,random_state):
+    def __init__():
         """ 
         Initialize class. 
         
