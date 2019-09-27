@@ -63,5 +63,8 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 reg = svm.SVR(gamma='scale')
 reg.fit(X_train,y_train)
-print('R^2 score: {0:.4f}'.format(reg.score(X_test,y_test)))
+print(" ")
+print("SVM model: ")
+print('Score: {0:.4f}'.format(reg.score(X_test,y_test)))
+print(" ")
 

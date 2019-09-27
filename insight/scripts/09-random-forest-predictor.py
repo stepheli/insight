@@ -56,6 +56,9 @@ regressor = RandomForestRegressor(max_depth=10,
                                   n_estimators=100)
 regressor.fit(X_train,np.array(y_train))
 
-print(regressor.feature_importances_)
+#print(regressor.feature_importances_)
+
 print(" ")
-print("R2 : {0:.4f}".format(regressor.score(X_test,y_test)))
+print("Random forest model: ")
+print('Score: {0:.4f}'.format(regressor.score(X_test,y_test)))
+print(" ")
