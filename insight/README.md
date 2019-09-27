@@ -1,51 +1,58 @@
 # DraftingTable
 
 # Overview 
-Writing clean code is hard work. Writing clear text about clean code is equally challenging. The goal of this project is to simplify this process by analysing a prospective blog post against the analytical metrics of the top 10% of most popular blog posts (determined by number of claps) for the top 5 most prolific blogs under the Medium umbrella:
-1. Towards Data Science
-2. Hacker Noon
-3. Becoming Human: Artificial Intelligence Magazine
-4. Chatbots Life
-5. Chatbots Magazine
+Writing clean code is hard work. Writing clear text about clean code is equally challenging. While quality does not necessairily equal popularity, This project aims to suggest improvements to blog posts before they are ever posted online, to improve the chances they will be seen by more people. 
+
+This is done by comparing the content of a draft article about data science to a historical database of articles in the same genre which were collected from data science-related sites hosted by Medium, where article success can be measured using the number of claps received. Suggestions for improvemenet are made with respect to the clarity in terms of analytical metrics, the similarity to existing works in terms of a content-based recommener system, and the category in terms of topic modelling to suggest useful tags. 
 
 # Data Sources & Processing
 
 The data set used in this project is compiled from three sources:
 
-1) A Kaggle dataset of 279,577 articles of scraped posts put together by  Aiswarya Ramachandran which contains scraped posts from Medium-affiliated plots tagged with AI, Machine Learning, Datascience, or Artificial Intelligence from September 2017 - September 2018.
-(https://www.kaggle.com/aiswaryaramachandran/medium-articles-with-content/downloads/medium-articles-with-content.zip/2)
-
-This data set was processed to perform exploratory data analysis and filter the data set to retain only article with an associated publication name and at least one code block. This code can be found in the script:
-> scripts/01-article-filterer.py
-This script outputs a truncated CSV containing the processed data to:
-> data/processed/filtereddata.csv
-
-The filtered data was processed further to perform exploratory NLP and topic modelling analysis. This was done in two scripts:
-> scripts/02-filtered-article-analyser.py
->> This script calculates analytical metrics for the text(average sentence length, word count, etc.) and code blocks (estimated language, ratio of code/comment lines, average comment length). These are outputted to the files:
->>> data/processed/articles_javascript.csv
->>> data/processed/articles_python.csv
->>>> (Pickled in draftingboard/articles_python.pickle)
->>> data/processed/articles_sql.csv
-
-2) A collection of 200+ more recent articles scraped specifically for this project from the publications represented in the above data set (Towards Data Science, Hacker Noon, Insight Data Science, etc.)
+1) A collection of 200+ recent articles scraped from the most popular Medium-affiliated data science sites (Towards Data Science, Hacker Noon, Insight Data Science, etc.)
 
 This scraping was performed and the relevant data blocks extracted in the script:
 > scripts/07-web-scraping-recent.py
 This script outputs a truncated CSV containining the processed data to:
 > data/processed/articles_scraped.csv
 
-3) The content of a draft post collected from the end-user through a Flask app, which is compared to the historical data set. The backend of the Flask app can be found in:
-> draftingboard/
+2) A Kaggle dataset of 279,577 articles of scraped posts put together by  Aiswarya Ramachandran which contains scraped posts from Medium-affiliated plots tagged with AI, Machine Learning, Datascience, or Artificial Intelligence from September 2017 - September 2018.
+(https://www.kaggle.com/aiswaryaramachandran/medium-articles-with-content/downloads/medium-articles-with-content.zip/2)
+
+This data set was processed to perform exploratory data analysis and filter the data set to retain only articles with an associated publication name and at least one code block. This code can be found in the script:
+> scripts/01-article-filterer.py
+> noteboos/01-exploratory-data-analysis.ipynb
+This script outputs a truncated CSV containing the processed data to:
+> data/processed/filtereddata.csv
 
 # Methodology & Algorithms
-What features of code and content translate to clear, accessible content? Do these features directly translate to success? To answer these questions, several natural language processing methods were applied:
+What features of code and content translate to clear, accessible content? Do these features directly translate to success? To answer these questions, several natural language processing methods were applied.
 
-(1) Topic modelling on articles sharing the same coding language. Given the imbalance in articles across coding languages (Python >> Javascript > SQL), only the Python articles were selected for this analysis. The method of Latent Dirichlet Allocation (LDA) as implemented by the sklearn analysis was selected for this approach, and was implemented in:
+(1) Clarity: article analytics. Individual articles within the collection which contain both text and code were analysed to extract metrics describing the content (vocabulary size, average sentence length, total word count, etc.) and the code (ratio of code/comment, average comment length, etc.) This is done in the script:
+- scripts/02-filtered-article-analyser.py
+
+At this stage, the articles were further separated into three files based on the dominant coding languages involved.
+> data/processed/articles_javascript.csv
+> data/processed/articles_python.csv
+> data/processed/articles_sql.csv
+
+In the final web app, Suggestion 1 is generated by comparing the text of the prospective post to the article database based on these analytics. The z-score (value - mean / std) for each metric is calculated, and the metric with the highest z-score is determined and returned to the user.
+
+(2) Similarity: content-based recommender system. The text content of the draft article is compared to the content within the article database based on cosine similarity. 
+
+The article text is pre-processed to convert case consistency, lemmatize text, and filter out both the list of English stopwords included in the NLTK standard set as well as Python-specific words determined to be common within this particular corpus ("pandas","row", "column", etc.)
+
+Word embedding is performed using TF-IDF scores, to avoid needing to retrain a neural network based embedding (word2vec/BERT) to handle the domain specific terminology ("Jupyter Notebook", "Latent Dirichlet Allocation", etc.) This is done in the script:
+- scripts/08-recommender-system.py
+
+(3) Category: topic modelling. Common themes within the article database are determined using the Latent Dirichlet Allocation (LDA) method as implemented by the scikit-learn package. Given the imbalance in articles across coding languages (Python >> Javascript > SQL), only the Python articles were selected for this analysis. The method of Latent Dirichlet Allocation (LDA) as implemented by the sklearn analysis was selected for this approach, and was implemented in:
 > scripts/03-topic-modelling-python.py
 
-The initial model (model_alpha) considered text with stopwords filtered out but no additional pre-processing, and identified topics which correlated well with clear subfields represented in the data science articles: natural language processing, neural networks, supervised learning,  and general data science. 
+In the final web app, Suggestion 2 is generating by estimating the topic of the draft text and suggesting relevant keywords common to that topic.
 
-The initial refinement (model_beta) considered additional pre-processing steps of stemming/lemmatizing, but displayed more overlap between the top keywords associated with each topic and less distinction between the topics.
+# Frontend development
+A frontend was built in Flask to bring together the three analyses described above and provide a simple process for users to get suggestions for improvement. It can be found here:
+> draftingboard.dev (18.189.138.64)
 
-model_alpha was used to assign both the historical articles and draft posts to a given topic.
+ The backend of the Flask app can be found in:
+> draftingboard/
