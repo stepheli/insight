@@ -444,33 +444,39 @@ class SingleArticleParser:
             
         """
         
-        soup = BeautifulSoup(self.article_raw,"html.parser")
-        
+        # Try an HTML parse
         try:
-            title = soup.title.string
+            soup = BeautifulSoup(self.article_raw,"html.parser")
+            
+            try:
+                title = soup.title.string
+            except:
+                title = 'nan'
+            
+            try:
+                text_all = str(' ')
+                text_blocks = soup.findAll('p')
+                for i in range(0,len(text_blocks)):
+                    text_all = text_all + str(text_blocks[i].contents)[3:-3] + str(' ')
+            except:
+                text_all = 'nan'
+            
+            try:
+                code_all = str(' ')
+                code_blocks = soup.findAll('code')
+                for i in range(0,len(code_blocks)):
+                    code_all = code_all + str(code_blocks[i].contents)[2:-2]
+            except:
+                code_all = 'nan'
+    			
+            try:
+                imagesCount = soup.findAll('img')
+            except:
+                imagesCount = float('nan')
         except:
             title = 'nan'
-        
-        try:
-            text_all = str(' ')
-            text_blocks = soup.findAll('p')
-            for i in range(0,len(text_blocks)):
-                text_all = text_all + str(text_blocks[i].contents)[3:-3] + str(' ')
-        except:
-            text_all = 'nan'
-        
-        try:
-            code_all = str(' ')
-            code_blocks = soup.findAll('code')
-            for i in range(0,len(code_blocks)):
-                code_all = code_all + str(code_blocks[i].contents)[2:-2]
-        except:
+            text_all = str(self.article_raw)
             code_all = 'nan'
-			
-        try:
-            imagesCount = soup.findAll('img')
-        except:
-            imagesCount = float('nan')
             
         time_present = datetime.now()
         time_string = time_present.strftime("%Y-%m-%d %I:%M:%S %p")
