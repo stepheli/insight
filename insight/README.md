@@ -1,12 +1,12 @@
 # DraftingTable
 
-# Overview 
+## Overview 
 ![Project splash screen: lined paper on a wooden desk.](/insight/figures/project_intro.JPG)
 Writing clean code is hard work. Writing clear text about clean code is equally challenging. While quality does not necessairily equal popularity, this project aims to suggest improvements to blog posts before they are ever posted online, to improve the chances they will be seen by more people. 
 
 This is done by comparing the content of a draft article about data science to a historical database of articles in the same genre which were collected from websites hosted by Medium, where article success can be measured using the number of claps received. Suggestions for improvement are made with respect to the clarity in terms of analytical metrics, the similarity to existing works in terms of a content-based recommender system, and the category in terms of topic modelling to suggest useful tags. 
 
-# Data Sources & Processing
+## Data Sources & Processing
 
 The data set used in this project is compiled from three sources:
 
@@ -50,7 +50,8 @@ The article text is pre-processed to convert case consistency, lemmatize text, a
 Word embedding is performed using TF-IDF scores, to avoid needing to retrain a neural network based embedding (word2vec/BERT) to handle the domain specific terminology ("Jupyter Notebook", "Latent Dirichlet Allocation", etc.) This is done in the script:
 - scripts/08-recommender-system.py
 
-![Example content-based recommendations between articles in the database.](/insight/figures/recommender_validation.jpg)
+<img source="https://github.com/stepheli/insight/blob/master/insight/figures/recommender_validation.jpg" width=500>
+
 
 ### (3) Category: Topic Modelling 
 Common themes within the article database are determined using the Latent Dirichlet Allocation (LDA) method as implemented by the scikit-learn package. Given the imbalance in articles across coding languages (Python >> Javascript > SQL), only the Python articles were selected for this analysis. The method of Latent Dirichlet Allocation (LDA) as implemented by the sklearn analysis was selected for this approach, and was implemented in:
@@ -63,11 +64,11 @@ The model was refined to achieve high intertopic distance (visualized through mu
 - Neural networks
 - Regressors, classifiers, and clustering
 
-![pyLDAvis of the intertopic distance in the optimal topic model.](/insight/figures/pyLDAvis.jpg)
+![pyLDAvis of the intertopic distance in the optimal topic model.](/insight/figures/pyLDAvis.PNG)
 
 In the final web app, Suggestion 3 is generating by estimating the topic of the draft text and suggesting relevant keywords common to that topic.
 
-# Frontend development
+## Frontend development
 A frontend was built in Flask to bring together the three analyses described above and provide a simple process for users to get suggestions for improvement. It can be found here:
 > draftingboard.dev (18.189.138.64)
 

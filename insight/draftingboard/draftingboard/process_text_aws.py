@@ -178,8 +178,7 @@ def generate_figure(article_draft, articles_popular):
 	plt.axvline(x = article_draft_time, 
 				ymin = 0, ymax = 1, color = 'r', linewidth = 2)
 	ax7.set_xlabel("Time of Day")
-	
-
+    
 	plt.subplots_adjust(wspace=0.35,hspace=0.4,top=0.9)
 	plt.savefig('static/img/output',bbox_inches='tight')
 
