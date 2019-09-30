@@ -50,11 +50,7 @@ The article text is pre-processed to convert case consistency, lemmatize text, a
 Word embedding is performed using TF-IDF scores, to avoid needing to retrain a neural network based embedding (word2vec/BERT) to handle the domain specific terminology ("Jupyter Notebook", "Latent Dirichlet Allocation", etc.) This is done in the script:
 - scripts/08-recommender-system.py
 
-<<<<<<< HEAD
 <img source="https://github.com/stepheli/insight/blob/master/insight/figures/recommender_validation.jpg" width=500>
-
-=======
-<img src="https://github.com/stepheli/insight/blob/master/insight/figures/recommender_validation.jpg" width=500>
 
 ### (3) Category: Topic Modelling 
 Common themes within the article database are determined using the Latent Dirichlet Allocation (LDA) method as implemented by the scikit-learn package. Given the imbalance in articles across coding languages (Python >> Javascript > SQL), only the Python articles were selected for this analysis. The method of Latent Dirichlet Allocation (LDA) as implemented by the sklearn analysis was selected for this approach, and was implemented in:
