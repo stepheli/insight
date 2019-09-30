@@ -1,6 +1,7 @@
 # DraftingTable
 
 # Overview 
+![Project splash screen: lined paper on a wooden desk.](/images/project_intro.JPG)
 Writing clean code is hard work. Writing clear text about clean code is equally challenging. While quality does not necessairily equal popularity, this project aims to suggest improvements to blog posts before they are ever posted online, to improve the chances they will be seen by more people. 
 
 This is done by comparing the content of a draft article about data science to a historical database of articles in the same genre which were collected from websites hosted by Medium, where article success can be measured using the number of claps received. Suggestions for improvement are made with respect to the clarity in terms of analytical metrics, the similarity to existing works in terms of a content-based recommender system, and the category in terms of topic modelling to suggest useful tags. 
