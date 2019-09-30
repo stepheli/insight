@@ -63,7 +63,7 @@ The model was refined to achieve high intertopic distance (visualized through mu
 - Neural networks
 - Regressors, classifiers, and clustering
 
-![pyLDAvis of the intertopic distance in the optimal topic model.](/insight/figures/pyLDAvis.jpg)
+![pyLDAvis of the intertopic distance in the optimal topic model.](/insight/figures/pyLDAvis.PNG)
 
 In the final web app, Suggestion 3 is generating by estimating the topic of the draft text and suggesting relevant keywords common to that topic.
 
