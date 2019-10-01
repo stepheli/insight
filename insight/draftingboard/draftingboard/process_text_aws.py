@@ -208,8 +208,18 @@ def recommend(index,indices,method,articles_all):
     similarity_scores_values = []
     for i in range(0,len(similarity_scores)):
         similarity_scores_values.append(similarity_scores[i][1])  
-    similarity_scores_mean = np.mean(similarity_scores_values)
-    similarity_scores_std = np.std(similarity_scores_values)
+    
+    # Drop values with a similarity score less than 5%
+    print(len(similarity_scores_values))
+    print("")
+    similarity_scores_thresh = [value for value in similarity_scores_values if value > 0.05]
+    print(len(similarity_scores_thresh))
+    print("")
+    print(similarity_scores_thresh[-50:-1])
+    
+    # Calculate mean and stdev on remaining
+    similarity_scores_mean = np.mean(similarity_scores_thresh)
+    similarity_scores_std = np.std(similarity_scores_thresh)
   
     similarity_scores_stats = [similarity_scores_mean, similarity_scores_std]
         

@@ -1,42 +1,37 @@
-<title> DraftingBoard: A tool for optimizing blog posts </title>
+<title> DraftingBoard: Clarity in content and code </title>
 
-<p> Writing clean code is hard, but writing clean text about clean code can be even more challenging. This tool is designed to take a look at the content of the first draft of a blog post which contains both text and code and offer suggestions about what to be improved to make it more accessible. For both authors and website hosts, this offers benefits in terms of higher readership, engagement, and advertising revenue.</p> 
+<p> Writing clean code is hard work. Writing clear text about clean code is equally challenging. While quality does not necessairily equal popularity, this project aims to suggest improvements to blog posts before they are ever posted online, to improve the chances they will be seen by more people. </p>
 
-<p> These suggestions are made through comparison of a prospective post to a database of previously published data science articles on the Medium platform. This analysis is based on natural language processing pipelines developed to process the code and text content of an article in order to calculate analytical metrics, perform topic modelling (unsupervised learning using LDA), and implement a regression model (supervised learning).</p>
-
-<p> Here's a sample code snippet for analysis.
-<code>
-import pandas as pd 
-
-for line in self.lines:
-# Reset tracking variables
-line_code = 0
-line_comment = 0
-
-# If the comment character is not present, assume line of code
-if line.find(commentchar) == -1:
-	 line_code = 1
-# If a comment character is present, determine where it falls to see if line is a pure comment, or mixed code + comment
-else:
-	 comment_start = line.index(commentchar)
-	 if comment_start == 0:
-		 line_code = 0
-		 line_comment = 1
-	 elif comment_start > 0:
-		 alphanum_check = line[0:comment_start].isalnum()
-		 if alphanum_check == 0:
-			 line_code = 0
-			 line_comment = 1
-		 else:
-			 line_code = 1
-			 line_comment = 1
-line_containscode.append(line_code)
-line_containscomment.append(line_comment)
-</code>
-
-<p> For an imported code that has already been divided into lines, the decision tree in the code above is used to determine whether a particular line contains pure code, pure comment, or mixed code and comment. 
+<p> This is done by comparing the content of a draft article about data science to a historical database of articles in the same genre which were collected from websites hosted by Medium, where article success can be measured using the number of claps received. Suggestions for improvement are made with respect to the clarity in terms of analytical metrics, the similarity to existing works in terms of a content-based recommender system, and the category in terms of topic modelling to suggest useful tags. </p>
 
 <code>
-# A second code block is used to test the code.
-list = [1,2,3]
+# Set up language keywords
+python_keywords = ["import","#"]
+javascript_keywords = ["var","//"]
+cmdline_keywords = ["sudo","apt-get","pip","$"]
+sql_keywords = ["SELECT"]
+
+# Assign language based on presence of keywords
+if any(keyword in self.words for keyword in python_keywords):
+	detected_language = 1 # Python
+if any(keyword in self.words for keyword in javascript_keywords):
+	# Avoid confusion with 'for var in vars' syntax; given dominance of
+	# Python articles, do not overwrite a Python assignment
+	if detected_language > 0: 
+		pass
+	else:
+		detected_language = 2 # Javascript
+if any(keyword in self.words for keyword in cmdline_keywords):
+	detected_language = 3 # cmdline
+if any(keyword in self.words for keyword in sql_keywords):
+	# Some flavours of SQL share # as the comment character. Given 
+	# dominance of Python articles, do not overwrite a Python assignment
+	if detected_language > 0:
+		pass
+	else:
+		detected_language = 4 # SQL
 </code>
+
+<p> The text content of the draft article is compared to the content within the article database based on cosine similarity.The article text is pre-processed to convert case consistency, lemmatize text, and filter out both the list of English stopwords included in the NLTK standard set as well as Python-specific words determined to be common within this particular corpus ("pandas","row", "column", etc.) </p>
+
+<p>Word embedding is performed using TF-IDF scores, to avoid needing to retrain a neural network based embedding (word2vec/BERT) to handle the domain specific terminology ("Jupyter Notebook", "Latent Dirichlet Allocation", etc.)</p>
