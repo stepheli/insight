@@ -85,3 +85,14 @@
  .text-primary{color:#1d809f!important}
  
  .text-secondary{color:#000000!important;overflow-y:scroll;text-align:left}
+ 
+.pre {
+    outline: 1px solid #ccc; 
+    padding: 5px; 
+    margin: 5px; 
+    white-space: pre-wrap;       
+    white-space: -moz-pre-wrap;  
+    white-space: -pre-wrap;      
+    white-space: -o-pre-wrap;    
+    word-wrap: break-word;       
+}

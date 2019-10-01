@@ -330,7 +330,7 @@ def suggestion2(similar_articles):
               sure yours is unique."
     
     suggestion2 = "The similarity score between your draft and the next closest article is {a:.2f}, \
-    compared to an average of {b:.2f}. {d})".format(a=sim_top,b=sim_mean,d=output)
+    compared to an average of {b:.2f}. {d}".format(a=sim_top,b=sim_mean,d=output)
     
 #    suggestion2 = "42: the answer to the question of life, the universe, and everything."
     
@@ -482,6 +482,7 @@ class SingleArticleParser:
                 imagesCount = soup.findAll('img')
             except:
                 imagesCount = float('nan')
+                
         except:
             title = 'nan'
             text_all = str(self.article_raw)
