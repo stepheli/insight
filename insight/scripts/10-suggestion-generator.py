@@ -1,99 +1,51 @@
+"""
+////OVERVIEW////
+This script takes a file containing the content of a draft post in pseudo-HTML 
+format (text indicated with <p> blocks, code indicated with <code> blocks) and
+generates suggestions for improvement based on the three analyses developed in 
+earlier scripts.
+    
+    (1) Article-level analytics to identify outliers in terms of sentence
+    length, degree of commenting, etc (e.g. Your sentences are too long and 
+    should be shortened)
+    
+    (2) Content-based recommendation system to identify if a similar article has
+    already been written.
+    
+    (3) Dominant topic assignment based on an existing LDA model, to identify
+    relevant tags that should be added to the article to increase its chance of
+    being seen by the right reaers.
+
+////SCRIPT COMPONENTS ////
+This section briefly describes the classes/functions involved; please see the 
+relevant docstrings for Inputs & outputs)
+    
+Classes in script:
+    - SingleArticleParser: Process code, text of article
+    
+Functions in script:
+    - recommend: Based on text content, determine similar articles
+    - assign_topic: Determine dominant topic in article based on LDA topic model
+    - suggestion1: Determine an analytics-based suggestion
+    - suggestion2: Determine a recommender-based suggestion
+    - suggestion3: Determine a topic model-based suggestion
+"""
+
+# Basic data structure handling
 from bs4 import BeautifulSoup
 import os
 import pandas as pd
 import numpy as np
 from datetime import datetime
 from scipy import stats 
+import string
 
 ## NLP & Machine Learning
 import nltk
-from nltk.stem import WordNetLemmatizer
-from nltk.tokenize import WhitespaceTokenizer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import linear_kernel
 from sklearn.feature_extraction.text import CountVectorizer
-from joblib import load
-import string
-
-# Plotting
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-import seaborn as sns
-sns.set(style="ticks", color_codes=True, font_scale=0.95)
-
-# Class definition
-class TopicModellingSklearn:
-    def __init__(self,text,text_proc_check,min_df,max_df,n_components,random_state):
-        """ 
-        Initialize class. 
-        
-        Arguments:
-            text - DF column containing text block
-            text_proc_check = Boolean controlling whether text is preprocessed
-            min_df = Minimum number of articles the word must appear in for the
-                word to be considered.
-            max_df = Threshold for unique words to considered (drop words 
-               appearing too frequently, as in stopwords)
-            n_topics = Number of topics to consider
-            random_seed = Random seed to use for the modelling
-        """
-        # Set up internal class variables
-        self.text = text
-        self.text_proc_check = text_proc_check
-        self.min_df = min_df
-        self.max_df = max_df
-        self.n_components = n_components
-        self.random_state = random_state
-        
-        # Pre-process text if requested
-        if self.text_proc_check == True:
-            self.text_preprocess()
-            
-            
-        # Fit an LDA model
-        self.LDA_model, self.word_frequency, self.vocabulary = self.LDA_model()
-    
-    def text_preprocess(self):
-        """ 
-        Arguments:
-            text - pandas series where each entry is the unprocessed text of
-                a given article.
-            
-        Outputs:
-            text_proc - pandas series where the article text has been processed
-                based on the following workflow:
-                    (1) Case consistency (all lowercase)
-                    (2) Lemmatizing
-        """   
-        lemmatizer = WordNetLemmatizer()
-        
-        for article in range(0,len(self.text)):
-            # Print a status update
-            if np.remainder(article,100) == 0:
-                print("Pre-processing requested. Lemmatizing checkpoint {}.".format(article))
-#                print("Original article: {}".format(self.text[article][0:500]))
-            
-            # Process article text, overwrite original text
-            article_text_proc = []
-            article_text = self.text[article].split(" ")
-            for word in article_text:
-                word = word.lower()
-                article_text_proc.append(lemmatizer.lemmatize(word))
-            self.text[article] = " ".join(article_text_proc)
-            
-#            if np.remainder(article,100) == 0:
-#                print("Lemmatized article: {}".format(self.text[article][0:500]))
-            
-    def LDA_model(self):
-        """ Fit text to an LDA model """
-        word_frequency = CountVectorizer(min_df = self.min_df,
-                                         stop_words = 'english')
-        vocabulary = word_frequency.fit_transform(
-                self.text.values.astype('U'))
-        
-        LDA = LatentDirichletAllocation(n_components = self.n_components,
-                                        random_state = self.random_state)
-        LDA_model = LDA.fit(vocabulary)
-        
-        return LDA_model, word_frequency, vocabulary
+import pickle
 
 class SingleArticleParser:
     def __init__(self,article_raw):
@@ -114,7 +66,7 @@ class SingleArticleParser:
         self.article_raw = article_raw
         
         # Pass imported file to article which splits it into text/code and 
-        # assigns basic features (current datetime etc.)        
+        # assigns basic features (current datetime etc.), then pre-processes it        
         self.article_processed = self.article_parser()
         print(self.article_processed)
         
@@ -197,8 +149,8 @@ class SingleArticleParser:
                              columns = ["title","text","codeBlock","firstPublishedDatetime","postId"],
                              index = ['draft_article'])
             
-        return article_processed       
-        
+        return article_processed   
+    
     def analyse_sentences(self):
         """  Analyse text on the sentence level. """  
         n_sentences = len(self.sentences)
@@ -306,6 +258,216 @@ class SingleArticleParser:
 
         return total_codelines, total_commentlines, ratio_codecomment, \
                 a_code_length, a_comment_length
+                
+def recommend(index,indices,method,articles_all):	
+    """
+    Purpose: Return the titles for articles which are the most similar by text 
+    content to the draft.
+    	
+    Inputs:
+        - index = Index of the draft article in the DF articles_all
+        - indices = List of all indices in the DF aticles_all
+        - method = Approach by which similarity should be calculated
+        - articles_all = DF containing the database of articles similarity should 
+        be calculated against.
+    		
+    Outputs:
+        - similar_articles = 3-item list containing titles of articles determined 
+        to be most similar
+    """
+    # Calculate similarity score across all articles in database
+    id = indices[index]
+    similarity_scores = list(enumerate(method[id]))
+    similarity_scores = sorted(similarity_scores, key=lambda x: x[1], reverse=True)
+        
+
+    # Store list of simscore values for later use in suggestion generation
+    similarity_scores_values = []
+    for i in range(0,len(similarity_scores)):
+        similarity_scores_values.append(similarity_scores[i][1])  
+    
+    # Drop values with a similarity score less than 5%
+    similarity_scores_thresh = [value for value in similarity_scores_values if value > 0.05]
+    
+    # Calculate mean and stdev on remaining
+    similarity_scores_mean = np.mean(similarity_scores_thresh)
+    similarity_scores_std = np.std(similarity_scores_thresh)
+  
+    similarity_scores_stats = [similarity_scores_mean, similarity_scores_std]
+        
+    similarity_scores_top = similarity_scores[1:4]  
+    articles_index = [i[0] for i in similarity_scores_top]
+    similarity_scores_topvalues = []
+    for i in range(0,len(similarity_scores_top)):
+        similarity_scores_topvalues.append(similarity_scores_top[i][1])
+        
+        
+    #Return the top 5 most similar books using integar-location based indexing (iloc)
+    return [articles_all['title'].iloc[articles_index], similarity_scores_top, similarity_scores_stats]
+
+def assign_topic(articles_all):
+    """
+    Overview: Determine the dominant topic in the article based on a pre-pickled
+    LDA topic model.
+    
+    Inputs:
+        - articles_all: PD/DF of the article database. Only the row containing the 
+             draft article will be used in this analysis.
+             
+    Outputs:
+        - assigned_topic = String containing a short description of the 
+          assigned topic
+    """
+    # Load previously pickled model, set up dictionary for mapping index to topic name
+    LDA_model = pickle.load(open('pickled_LDA_model_v2.sav','rb'))
+    article_draft = articles_all.loc[["draft_article"]]
+    
+    model_dict = {0 : 'general machine learning',
+                 1 : 'general data science',
+                 2 : 'natural language processing',
+                 3 : 'natural language processing',
+                 4 : 'general data science',
+                 5 : 'neural networks',
+                 6 : 'regressors, classifiers, and clustering'}
+    
+    # Pass text of draft article to count vectorizer to prep for fitting
+    try:
+        word_frequency = CountVectorizer(stop_words='english')
+        vocabulary = word_frequency.fit_transform(article_draft["text"])
+        
+        assigned_topic_index = LDA_model.fit_transform(vocabulary)
+        
+        # Assign topic with the highest probability, map index to name and return to master_function 
+        assigned_topic_index = np.argmax(assigned_topic_index)       
+        assigned_topic = model_dict[assigned_topic_index]
+        
+    except:
+        assigned_topic = "unknown"
+    
+    return assigned_topic
+                
+def suggestion1(articles_all):
+    """
+    Overview: Generate an analytics-based suggestion for article improvement 
+    based on maximum zscore for draft article compared to distribution in popular
+    articles
+    
+    Inputs: 
+        - articles_all: PD/DF of the article database
+        
+    Outputs: 
+        - suggestion1_string: String containing info regarding most different 
+          metric (what it is, what the average is, whether it's higher/lower than
+          normal) 
+        
+    """
+    zscores = pd.DataFrame({'total_codelines' : stats.zscore(articles_all["total_codelines"].iloc[:]),
+                            'total_commentlines' : stats.zscore(articles_all["total_commentlines"].iloc[:]),
+                            'ratio_codecomment' : stats.zscore(articles_all["ratio_codecomment"].iloc[:]),
+                            'a_code_length' : stats.zscore(articles_all["a_code_length"].iloc[:]),
+                            'a_comment_length' : stats.zscore(articles_all["a_comment_length"].iloc[:]),
+                            'n_sentences' : stats.zscore(articles_all["n_sentences"].iloc[:]),
+                            'a_sentence_length' : stats.zscore(articles_all["a_sentence_length"].iloc[:]),
+                            'n_words' : stats.zscore(articles_all["n_words"].iloc[:]),
+                            'u_words' : stats.zscore(articles_all["u_words"].iloc[:]),
+                            'a_word_length' : stats.zscore(articles_all["a_word_length"].iloc[:])
+                            },
+                            index=articles_all["postId"])
+    zscores_abs = zscores.apply(np.absolute, axis=1)
+    zscores_draft = [np.argmax(zscores_abs.loc["draft_article"][:]),
+                     np.max(zscores_abs.loc["draft_article"][:])]
+    
+    dict_characteristics = {'total_codelines' : 'total of code lines',
+                            'total_commentlines' : 'total of comment lines',
+                            'ratio_codecomment' : 'ratio of code/comment lines',
+                            'a_code_length' : 'average length of code line',
+                            'a_comment_length' : 'avergae length of commentline',
+                            'n_sentences' : 'total number of sentences',
+                            'a_sentence_length' : 'average words/sentence',
+                            'n_words' : 'word count',
+                            'u_words' : 'vocabulary size',
+                            'a_word_length' : 'average sentence length'}
+    char_draft = dict_characteristics.get(zscores_draft[0])
+    value_draft = articles_all[zscores_draft[0]].iloc[len(articles_all)-1]
+    sign_draft = str(np.sign(zscores.loc["draft_article",str(zscores_draft[0])]))
+    mean_all = np.mean(articles_all[zscores_draft[0]])
+    
+    dict_sign_descript = {'-1.0' : 'lower',
+                          '1.0' : 'higher'}
+    sign_sugg_descript = dict_sign_descript.get(sign_draft)
+    
+    dict_sign = {'-1.0' : "increasing",
+                 '1.0' : "decreasing"}
+    sign_sugg = dict_sign.get(sign_draft)
+    
+    suggestion1 = "Your " + char_draft + " of " + "{:.2f}".format(value_draft) + \
+    " is " + sign_sugg_descript + " than the average of " "{:.2f}".format(mean_all) + \
+    ", consider " + sign_sugg + " this for increased clarity."
+    
+    return suggestion1
+
+def suggestion2(similar_articles): 
+    """
+    Purpose: Generate a suggestion based on article similarity.
+    
+    Inputs:
+        - similar_articles 
+        
+    Outputs:
+        - suggestion2: String with suggestion to be displayed
+    """
+    sim_top = similar_articles[1][0][1]
+    sim_mean = similar_articles[2][0]
+    sim_std = similar_articles[2][1]
+        
+    if sim_top < 5*sim_mean: # threshold for determining uniqueness.
+        output="This content appears unique in the reference database! Great work."
+    else:
+        output="Take a second look at the articles deemed to be similar to make \
+              sure yours is unique."
+    
+    suggestion2 = "The similarity score between your draft and the next closest article is {a:.2f}, \
+    compared to an average of {b:.2f}. {d}".format(a=sim_top,b=sim_mean,d=output)
+        
+    return suggestion2
+
+def suggestion3(article_topic):
+    """
+    Purpose: Generate a suggestion for tags to add based on the detected topic.
+    """
+    
+    if article_topic == 'general machine learning':
+        keywords = 'machine learning, \
+            artificial intelligence, \
+            scoring, \
+            and confusion matrix.'
+    elif article_topic == 'general data science':
+        keywords = 'data science, \
+            programming, \
+            data visualization \
+            and accuracy.'
+    elif article_topic == 'natural language processing':
+        keywords = 'machine learning \
+            NLP, \
+            web scraping, \
+            gensim, \
+            and pipeline.'
+    elif article_topic == 'neural networks':
+        keywords = 'machine learning, \
+            artificial intelligence, \
+            neural networks,\
+            and deep learning.'
+    elif article_topic == 'regressors, classifiers, and clustering':
+        keywords = 'machine learning, \
+        scoring, \
+        and confusion matrix.'
+    else:
+        keywords = 'Err.'
+    
+    suggestion3 = "Your article appears to be about the topic of {a}. \
+        Tags that may be relevant include: {b}".format(a=article_topic,b=keywords)
+       
+    return suggestion3
        
 # Set up file path to draft article
 filedir_draft = os.path.dirname(os.path.realpath('__file__'))
@@ -318,73 +480,45 @@ article_filename = open(filename_draft,"r")
 article_raw = article_filename.read()
 article_filename.close()
 
-# Set up file path to Python article dataset 
-# (raw text/code processed in 02-filtered-article-analyser.py)
-filedir_python = os.path.dirname(os.path.realpath('__file__'))
-filename_python = 'articles_python.csv'
-filename_python = os.path.join('../data/processed/'+filename_python)
-filename_python = os.path.abspath(os.path.realpath(filename_python))
 
-# Open and import file
-articles_python = pd.read_csv(filename_python, index_col = "postId")
-articles_python["firstPublishedDatetime"] = pd.to_datetime(
-        articles_python["firstPublishedDatetime"])
+articles_all = pd.read_pickle('articles_python.pickle')
+articles_popular = pd.read_pickle('articles_python_popular.pickle')
 
-# Analyse draft article
+# Feed user input to single article parser (returns a DF that contains NLP 
+# metrics for the article)
 article_draft = SingleArticleParser(article_raw).article_processed
-article_draft["firstPublishedDatetime"] = pd.to_datetime(
-        article_draft["firstPublishedDatetime"])
+article_draft["firstPublishedDatetime"] = pd.to_datetime(article_draft["firstPublishedDatetime"])
+ 
+articles_all = articles_all.append(article_draft)
+article_draft_index = len(articles_all) - 1
+articles_all.loc["draft_article","postId"] = "draft_article"
 
-articles_all = articles_python.append(article_draft)
-articles_all.loc["draft_article","postId2"] = "draft_article"
+# Assign topic
+article_topic = assign_topic(articles_all)
+	
+# Process text column to construct tfidf_matrix as input for cosine similarity
+topic_frequency = TfidfVectorizer(analyzer = 'word',
+									 min_df = 1,
+									 stop_words = 'english')
+tfidf_matrix = topic_frequency.fit_transform(articles_all["text"])
 
-# Convert datetimeobjects to hour of post for later plotting
-articles_timelist = []
-for i in range(0,len(articles_python)):
-    articles_timelist.append(
-            articles_python["firstPublishedDatetime"].iloc[i].time().hour)
-article_draft_time = article_draft["firstPublishedDatetime"].iloc[0].time().hour
+cosine_similarity = linear_kernel(tfidf_matrix, tfidf_matrix) 
+articles_all = articles_all.reset_index(drop=True)
 
-## Construct z-scores
-zscores = pd.DataFrame({'total_codelines' : stats.zscore(articles_all["total_codelines"].iloc[:]),
-                        'total_commentlines' : stats.zscore(articles_all["total_commentlines"].iloc[:]),
-                        'ratio_codecomment' : stats.zscore(articles_all["ratio_codecomment"].iloc[:]),
-                        'a_code_length' : stats.zscore(articles_all["a_code_length"].iloc[:]),
-                        'a_comment_length' : stats.zscore(articles_all["a_comment_length"].iloc[:]),
-                        'n_sentences' : stats.zscore(articles_all["n_sentences"].iloc[:]),
-                        'a_sentence_length' : stats.zscore(articles_all["a_sentence_length"].iloc[:]),
-                        'n_words' : stats.zscore(articles_all["n_words"].iloc[:]),
-                        'u_words' : stats.zscore(articles_all["u_words"].iloc[:]),
-                        'a_word_length' : stats.zscore(articles_all["a_word_length"].iloc[:])
-                        },
-                        index=articles_all["postId"])
-zscores_abs = zscores.apply(np.absolute, axis=1)
-zscores_draft = [np.argmax(zscores_abs.loc["draft_article"][:]),
-                 np.max(zscores_abs.loc["draft_article"][:])]
-print(zscores_draft)
+indices = pd.Series(articles_all["text"].index)
+	
+# Recommend similar articles
+similar_articles = recommend(article_draft_index, indices, cosine_similarity, articles_all)
 
-dict_characteristics = {'total_codelines' : 'total of code lines',
-                        'total_commentlines' : 'total of comment lines',
-                        'ratio_codecomment' : 'ratio of code/comment lines',
-                        'a_code_length' : 'average length of code line',
-                        'a_comment_length' : 'avergae length of commentline',
-                        'n_sentences' : 'total number of sentences',
-                        'a_sentence_length' : 'average words/sentence',
-                        'n_words' : 'word count',
-                        'u_words' : 'vocabulary size',
-                        'a_word_length' : 'average sentence length'}
-char_draft = dict_characteristics.get(zscores_draft[0])
-value_draft = articles_all.loc["draft_article",zscores_draft[0]]
-sign_draft = str(np.sign(zscores.loc["draft_article",str(zscores_draft[0])]))
-mean_all = np.mean(articles_all[zscores_draft[0]])
+# Feed processed draft into the suggestion system
+suggestion1_string = suggestion1(articles_all)
+suggestion2_string = suggestion2(similar_articles)
+suggestion3_string = suggestion3(article_topic)
 
-dict_sign_descript = {'-1.0' : 'lower',
-                      '1.0' : 'higher'}
-sign_sugg_descript = dict_sign_descript.get(sign_draft)
-
-dict_sign = {'-1.0' : "increasing",
-             '1l0' : "decreasing"}
-sign_sugg = dict_sign.get(sign_draft)
-
-suggestion1 = print("Your {a} of {b:.2f} is {c} than the average of {d:.2f}, consider {e}.".format(
-        a=char_draft, b=value_draft, c=sign_sugg_descript, d=mean_all, e=sign_sugg))
+print(" ")
+print(suggestion1_string)
+print(" ")
+print(suggestion2_string)
+print(" ")
+print(suggestion3_string)
+print(" ")
