@@ -2,7 +2,9 @@
 
 ## Overview 
 ![Project splash screen: lined paper on a wooden desk.](/insight/figures/project_intro.JPG)
-Writing clean code is hard work. Writing clear text about clean code is equally challenging. While quality does not necessairily equal popularity, this project aims to suggest improvements to blog posts before they are ever posted online, to improve the chances they will be seen by more people. 
+Writing clean code is hard work. Writing clear text about clean code is equally challenging. Even after the initial draft is complete, authors face stiff competition: when it comes to online publishing, there is a huge imbalance in readership. With respect to the data set compiled for this project, 5% of the articles written have 73% of the positive attention.
+
+While quality does not necessairily equal popularity, this project aims to suggest improvements to blog posts before they are ever posted online, to improve the chances they will be seen by more people. 
 
 This is done by comparing the content of a draft article about data science to a historical database of articles in the same genre which were collected from websites hosted by Medium, where article success can be measured using the number of claps received. Suggestions for improvement are made with respect to the clarity in terms of analytical metrics, the similarity to existing works in terms of a content-based recommender system, and the category in terms of topic modelling to suggest useful tags. 
 
@@ -10,24 +12,17 @@ This is done by comparing the content of a draft article about data science to a
 
 The data set used in this project is compiled from three sources:
 
-1) A collection of 200+ recent articles scraped from the most popular Medium-affiliated data science sites (Towards Data Science, Hacker Noon, Insight Data Science, etc.)
+1) Web scraping. A collection of 200+ recent articles was scraped from the most popular Medium-affiliated data science sites (Towards Data Science, Hacker Noon, Insight Data Science, etc.)
 
-This scraping was performed and the relevant data blocks extracted in the script:
-> scripts/07-web-scraping-recent.py
-This script outputs a truncated CSV containining the processed data to:
-> data/processed/articles_scraped.csv
-
-2) A Kaggle dataset of 279,577 articles of scraped posts put together by  Aiswarya Ramachandran which contains scraped posts from Medium-affiliated plots tagged with AI, Machine Learning, Datascience, or Artificial Intelligence from September 2017 - September 2018.
+2) Existing data. A dataset of 279,577 articles of scraped posts put together by  Aiswarya Ramachandran which contains scraped posts from Medium-affiliated plots tagged with AI, Machine Learning, Datascience, or Artificial Intelligence from September 2017 - September 2018.
 (https://www.kaggle.com/aiswaryaramachandran/medium-articles-with-content/downloads/medium-articles-with-content.zip/2)
 
-This data set was processed to perform exploratory data analysis and filter the data set to retain only articles with an associated publication name and at least one code block. This code can be found in the script:
-> scripts/01-article-filterer.py
-> noteboos/01-exploratory-data-analysis.ipynb
-This script outputs a truncated CSV containing the processed data to:
-> data/processed/filtereddata.csv
+3) User input. A web app was developed where users can input their prospective post to be analysed, generating suggestions for improvement. If entered as pseudo-HTML code where code blocks are explicitly declared using &lt;code&gt; tags, the input will be separated into text and code and these two components processed separately. If entered as a block of text, the input will be treated as one long string and run through the text NLP pipeline. In either case, a message describing how the input was processed will be returned to the user in the web app.
 
 ## Methodology & Algorithms
 What features of code and content translate to clear, accessible content? Do these features directly translate to success? To answer these questions, several natural language processing methods were applied.
+
+### Pre-processing
 
 ### (1) Clarity: Article Analytics 
 Individual articles within the collection which contain both text and code were analysed to extract metrics describing the content (vocabulary size, average sentence length, total word count, etc.) and the code (ratio of code/comment, average comment length, etc.) This is done in the script:
